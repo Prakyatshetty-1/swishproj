@@ -1,0 +1,46 @@
+📁config/
+    Purpose → App configuration
+    
+    db.js → Connects to MongoDB
+
+📁 models/
+
+    Purpose → Defines database structure (schemas)
+
+    User.js → User data (student, faculty, admin)
+
+    Post.js → Posts in the feed
+
+    Comment.js → Comments on posts
+
+📁 routes/
+
+    Purpose → Defines API URLs (endpoints)
+
+    auth.js → Login & signup routes
+
+    users.js → Profile & user-related routes
+
+    posts.js → Feed, create post, like routes
+
+    admin.js → Admin-only routes
+
+📁 controllers/
+
+    Purpose → Business logic (what happens when API is called)
+
+    authController.js → Login/signup logic
+
+    userController.js → Profile & user actions
+
+    postController.js → Post creation & feed logic
+
+    adminController.js → Admin actions (ban, delete)
+
+📁 middleware/
+
+    Purpose → Checks before controller runs
+
+    authMiddleware.js → Checks if user is logged in
+
+    adminMiddleware.js → Checks if user is admin
