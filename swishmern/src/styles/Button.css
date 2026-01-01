@@ -1,0 +1,29 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.btn:hover {
+  transform: scale(1.02);
+}
+
+.btn-brand {
+  background: linear-gradient(to right, #2563EB, #4F46E5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-hero {
+  background-color: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+}

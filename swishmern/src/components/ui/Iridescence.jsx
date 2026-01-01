@@ -1,6 +1,8 @@
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
 
+import '../../styles/Iridescence.css';
+
 const vertexShader = `
 attribute vec2 uv;
 attribute vec2 position;
@@ -119,8 +121,7 @@ export default function Iridescence({ color = [1, 1, 1], speed = 1.0, amplitude 
       ctn.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [color, speed, amplitude, mouseReact]);
 
-  return <div ref={ctnDom} className="w-full h-full" {...rest} />;
+  return <div ref={ctnDom} className="iridescence-container" {...rest} />;
 }
