@@ -1,0 +1,38 @@
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.logo-icon-wrapper {
+  background: linear-gradient(135deg, #2563EB, #4F46E5);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #2563EB, #4F46E5);
+  -webkit-background-clip: text;
+  color: transparent; 
+  /* Fallback for browsers that don't support text clip */
+  color: #1e293b; 
+}
+
+/* Ensure text gradient works in WebKit browsers */
+@supports (-webkit-background-clip: text) {
+  .logo-text {
+    background: linear-gradient(to right, #2563EB, #4F46E5);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+}

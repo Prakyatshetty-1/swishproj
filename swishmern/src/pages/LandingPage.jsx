@@ -71,7 +71,7 @@ export default function Landing() {
                 </Button>
               </Link>
               <Link to="/login" style={{ textDecoration: 'none' }}>
-                <Button variant="hero" className="btn-lg">
+                <Button variant="hero" className="btn-lg2">
                   Login
                 </Button>
               </Link>
