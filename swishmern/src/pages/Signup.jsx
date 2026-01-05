@@ -52,7 +52,6 @@ export default function Signup() {
       let avatarUrl = null;
       
       if (imageFile) {
-        // Wait for FileReader to complete
         avatarUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);
@@ -61,17 +60,7 @@ export default function Signup() {
         });
       }
       
-      // Now submit with the avatar URL
-      await submitSignup(avatarUrl);
-    } catch (err) {
-      setIsLoading(false);
-      setError(err.message || "Signup failed. Please try again.");
-      console.error("Signup error:", err);
-    }
-  }
-
-  async function submitSignup(avatarUrl) {
-    try {
+      // Submit signup
       const response = await axios.post(`${API_BASE_URL}/auth/signup`, {
         name: formData.name,
         email: formData.email,
@@ -84,13 +73,23 @@ export default function Signup() {
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      // DO NOT set onboardingComplete here - user needs to complete onboarding first
+      localStorage.removeItem("onboardingComplete");
+
+      console.log("✅ Signup successful, tokens stored");
 
       setIsLoading(false);
-      navigate("/onboarding");
+      
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      // Navigate to onboarding
+      navigate("/onboarding", { replace: true });
+
     } catch (err) {
       setIsLoading(false);
-      setError(err.response?.data?.message || "Signup failed. Please try again.");
-      console.error("Signup error:", err);
+      setError(err.response?.data?.message || err.message || "Signup failed. Please try again.");
+      console.error("❌ Signup error:", err);
     }
   }
 

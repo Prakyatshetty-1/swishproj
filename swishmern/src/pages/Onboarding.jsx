@@ -32,8 +32,30 @@ export default function Onboarding() {
       setStep(step + 1);
     } else {
       // Final Step: Submit Data
-      console.log("Onboarding Complete:", data);
-      navigate('/home'); // Redirect to dashboard
+      console.log("✅ Onboarding Complete:", data);
+      
+      // Save onboarding data to localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const updatedUser = {
+        ...user,
+        role: data.role,
+        department: data.department,
+        ...(data.role === 'student' && {
+          year: data.year,
+          division: data.division
+        })
+      };
+      
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem('onboardingComplete', 'true');
+      
+      console.log("✅ Onboarding data saved to localStorage");
+      
+      // Dispatch event to update auth state
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      // Navigate to home
+      navigate('/home', { replace: true });
     }
   };
 
