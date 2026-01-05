@@ -41,7 +41,7 @@ export default function HomePage() {
       localStorage.removeItem("user");
 
       setIsLoading(false);
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       setIsLoading(false);
       console.error("Logout error:", error);
@@ -49,7 +49,7 @@ export default function HomePage() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
-      navigate("/login");
+      navigate("/");
     }
   };
 

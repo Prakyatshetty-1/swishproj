@@ -14,16 +14,30 @@ function App() {
 
   useEffect(() => {
     // Check if user has valid tokens
-    const accessToken = localStorage.getItem('accessToken');
-    const user = localStorage.getItem('user');
-    
-    if (accessToken && user) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    
+    const checkAuth = () => {
+      const accessToken = localStorage.getItem('accessToken');
+      const user = localStorage.getItem('user');
+      
+      if (accessToken && user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuth();
     setIsLoading(false);
+
+    // Listen for storage changes (when login/logout happens in another tab)
+    window.addEventListener('storage', checkAuth);
+    
+    // Listen for custom auth event (when login/logout happens in same tab)
+    window.addEventListener('authStateChanged', checkAuth);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authStateChanged', checkAuth);
+    };
   }, []);
 
   // Root route - redirect to home if authenticated, otherwise to landing page

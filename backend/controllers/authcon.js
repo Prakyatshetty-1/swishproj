@@ -2,8 +2,8 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || ' ';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || ' ';
 
 // Generate JWT Tokens
 const generateTokens = (userId) => {
@@ -81,14 +81,18 @@ export const login = async (req, res) => {
     // Find user and include password field
     const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
     if (!user) {
+      console.log(`❌ Login failed: User not found for email: ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
+      console.log(`❌ Login failed: Invalid password for user: ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+    
+    console.log(`✅ Login successful for user: ${email}`);
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);

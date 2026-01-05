@@ -37,13 +37,24 @@ export default function Login() {
         rememberMe: rememberMe,
       });
 
-      // Store tokens and user info in localStorage
-      localStorage.setItem("accessToken", response.data.accessToken);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      if (response.data && response.data.accessToken && response.data.user) {
+        // Store tokens and user info in localStorage
+        localStorage.setItem("accessToken", response.data.accessToken);
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      setIsLoading(false);
-      navigate("/home");
+        setIsLoading(false);
+        
+        // Dispatch custom event to notify App of auth state change
+        window.dispatchEvent(new Event('authStateChanged'));
+        
+        // Delay slightly to ensure App has processed the auth state change
+        setTimeout(() => {
+          navigate("/home", { replace: true });
+        }, 50);
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (err) {
       setIsLoading(false);
       setError(err.response?.data?.message || "Login failed. Please try again.");
