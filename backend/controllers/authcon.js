@@ -1,0 +1,162 @@
+import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
+
+// Generate JWT Tokens
+const generateTokens = (userId) => {
+  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+  const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  return { accessToken, refreshToken };
+};
+
+// SIGNUP
+export const signup = async (req, res) => {
+  try {
+    const { name, email, password, role = 'student', avatarUrl = null } = req.body;
+
+    // Validate inputs
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide name, email, and password' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Create new user
+    const newUser = new User({
+      name,
+      email: email.toLowerCase(),
+      passwordHash,
+      role,
+      avatarUrl,
+    });
+
+    await newUser.save();
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(newUser._id);
+
+    // Save refresh token to database
+    newUser.refreshTokens.push(refreshToken);
+    await newUser.save();
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        avatarUrl: newUser.avatarUrl,
+      },
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Error creating user', error: error.message });
+  }
+};
+
+// LOGIN
+export const login = async (req, res) => {
+  try {
+    const { email, password, rememberMe } = req.body;
+
+    // Validate inputs
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    // Find user and include password field
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Compare passwords
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    // Save refresh token if "Remember me" is checked
+    if (rememberMe) {
+      user.refreshTokens.push(refreshToken);
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+      },
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Error logging in', error: error.message });
+  }
+};
+
+// LOGOUT
+export const logout = async (req, res) => {
+  try {
+    const { userId, refreshToken } = req.body;
+
+    // Find user and remove the refresh token
+    await User.findByIdAndUpdate(userId, {
+      $pull: { refreshTokens: refreshToken },
+    });
+
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ message: 'Error logging out', error: error.message });
+  }
+};
+
+// REFRESH TOKEN
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Refresh token required' });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || !user.refreshTokens.includes(refreshToken)) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
+
+    // Generate new access token
+    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({ accessToken });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(401).json({ message: 'Invalid refresh token', error: error.message });
+  }
+};

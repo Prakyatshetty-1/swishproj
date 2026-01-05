@@ -1,28 +1,35 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "../components/ui/Button"; 
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Camera } from "lucide-react";
 import Logo from "../components/ui/Logo";
 
 import "../styles/Signup.css";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   
   // State for Form Data
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    role: "student",
   });
 
   // State for Profile Image Preview
   const [profileImage, setProfileImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(""); // Clear error when user starts typing
   }
 
   // Handle Image Selection
@@ -31,19 +38,60 @@ export default function Signup() {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setProfileImage(imageUrl);
+      setImageFile(file);
     }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Simulate signup process
-    setTimeout(() => {
+    try {
+      // Convert image to base64 if exists
+      let avatarUrl = null;
+      
+      if (imageFile) {
+        // Wait for FileReader to complete
+        avatarUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(imageFile);
+        });
+      }
+      
+      // Now submit with the avatar URL
+      await submitSignup(avatarUrl);
+    } catch (err) {
       setIsLoading(false);
-      alert("Sign Up Successful!");
-      navigate("/onboarding"); 
-    }, 1500);
+      setError(err.message || "Signup failed. Please try again.");
+      console.error("Signup error:", err);
+    }
+  }
+
+  async function submitSignup(avatarUrl) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/signup`, {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        avatarUrl: avatarUrl,
+      });
+
+      // Store tokens and user info in localStorage
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      setIsLoading(false);
+      navigate("/onboarding");
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.response?.data?.message || "Signup failed. Please try again.");
+      console.error("Signup error:", err);
+    }
   }
 
   return (
@@ -84,6 +132,7 @@ export default function Signup() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {error && <div className="error-message" style={{color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}
           
           {/* Full Name */}
           <div className="form-group">

@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "../components/ui/Button"; 
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import Logo from "../components/ui/Logo";
 
 import "../styles/Login.css";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false); // State for checkbox
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,17 +22,33 @@ export default function Login() {
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(""); // Clear error when user starts typing
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Simulate login
-    setTimeout(() => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email: formData.email,
+        password: formData.password,
+        rememberMe: rememberMe,
+      });
+
+      // Store tokens and user info in localStorage
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
       setIsLoading(false);
-      navigate("/home"); 
-    }, 1500);
+      navigate("/home");
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+      console.error("Login error:", err);
+    }
   }
 
   return (
@@ -46,6 +66,8 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {error && <div className="error-message" style={{color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}
+          
           <div className="form-group">
             <label className="form-label">Campus Email</label>
             <div className="input-wrapper">
