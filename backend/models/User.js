@@ -25,6 +25,22 @@ const userSchema = new mongoose.Schema(
       enum: ['student', 'faculty', 'admin'],
       default: 'student',
     },
+    department: {
+      type: String,
+      default: null,
+    },
+    year: {
+      type: String,
+      default: null,
+    },
+    division: {
+      type: String,
+      default: null,
+    },
+    onboardingComplete: {
+      type: Boolean,
+      default: false,
+    },
     avatarUrl: {
       type: String,
       default: null,

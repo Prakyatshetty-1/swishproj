@@ -164,3 +164,52 @@ export const refreshAccessToken = async (req, res) => {
     res.status(401).json({ message: 'Invalid refresh token', error: error.message });
   }
 };
+
+// SAVE ONBOARDING DATA
+export const saveOnboarding = async (req, res) => {
+  try {
+    const { userId, role, department, year, division } = req.body;
+
+    // Validate inputs
+    if (!userId || !role || !department) {
+      return res.status(400).json({ message: 'Please provide userId, role, and department' });
+    }
+
+    // Find user and update onboarding data
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        role,
+        department,
+        year: role === 'student' ? year : null,
+        division: role === 'student' ? division : null,
+        onboardingComplete: true,
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log(`✅ Onboarding completed for user: ${user.email}`);
+
+    res.status(200).json({
+      message: 'Onboarding data saved successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        year: user.year,
+        division: user.division,
+        onboardingComplete: user.onboardingComplete,
+        avatarUrl: user.avatarUrl,
+      },
+    });
+  } catch (error) {
+    console.error('Onboarding error:', error);
+    res.status(500).json({ message: 'Error saving onboarding data', error: error.message });
+  }
+};

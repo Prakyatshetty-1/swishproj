@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { GraduationCap, Briefcase, ChevronLeft, Check } from 'lucide-react';
 import Logo from '../components/ui/Logo';
 import '../styles/Onboarding.css';
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   
   // State to hold all answers
   const [data, setData] = useState({
@@ -25,37 +30,61 @@ export default function Onboarding() {
   // --- Handlers ---
   const handleSelect = (field, value) => {
     setData({ ...data, [field]: value });
+    setError("");
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // Final Step: Submit Data
-      console.log("✅ Onboarding Complete:", data);
+      // Final Step: Submit Data to Backend
+      await submitOnboarding();
+    }
+  };
+
+  const submitOnboarding = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
       
-      // Save onboarding data to localStorage
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const updatedUser = {
-        ...user,
+      
+      if (!user.id) {
+        throw new Error('User ID not found. Please log in again.');
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/auth/save-onboarding`, {
+        userId: user.id,
         role: data.role,
         department: data.department,
-        ...(data.role === 'student' && {
-          year: data.year,
-          division: data.division
-        })
-      };
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      localStorage.setItem('onboardingComplete', 'true');
-      
-      console.log("✅ Onboarding data saved to localStorage");
-      
-      // Dispatch event to update auth state
-      window.dispatchEvent(new Event('authStateChanged'));
-      
-      // Navigate to home
-      navigate('/home', { replace: true });
+        year: data.role === 'student' ? data.year : null,
+        division: data.role === 'student' ? data.division : null,
+      });
+
+      if (response.data && response.data.user) {
+        // Update localStorage with updated user data
+        const updatedUser = {
+          ...user,
+          ...response.data.user,
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.setItem('onboardingComplete', 'true');
+
+        console.log("✅ Onboarding data saved to database");
+        
+        // Dispatch event to update auth state
+        window.dispatchEvent(new Event('authStateChanged'));
+        
+        // Navigate to home
+        setIsLoading(false);
+        navigate('/home', { replace: true });
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.response?.data?.message || err.message || "Failed to save onboarding data");
+      console.error("Onboarding error:", err);
     }
   };
 
@@ -173,6 +202,9 @@ export default function Onboarding() {
           <div className="progress-fill" style={{ width: `${progress}%` }}></div>
         </div>
 
+        {/* Error Message */}
+        {error && <div className="error-message" style={{color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}
+
         {/* Dynamic Content */}
         <div className="step-content">
           {step === 1 && renderRoleStep()}
@@ -187,6 +219,7 @@ export default function Onboarding() {
             className="back-btn" 
             onClick={handleBack}
             style={{ visibility: step === 1 ? 'hidden' : 'visible' }}
+            disabled={isLoading}
           >
             <ChevronLeft size={20} style={{ display: 'inline', verticalAlign: 'middle' }}/> Back
           </button>
@@ -194,9 +227,13 @@ export default function Onboarding() {
           <button 
             className="next-btn" 
             onClick={handleNext}
-            disabled={!isStepValid()}
+            disabled={!isStepValid() || isLoading}
           >
-            {step === totalSteps ? 'Finish' : 'Next'}
+            {isLoading ? (
+              <div className="spinner" style={{display: 'inline-block', width: '16px', height: '16px', border: '2px solid transparent', borderTop: '2px solid currentColor', borderRadius: '50%', animation: 'spin 0.6s linear infinite'}} />
+            ) : (
+              step === totalSteps ? 'Finish' : 'Next'
+            )}
           </button>
         </div>
       </div>

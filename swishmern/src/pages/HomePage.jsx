@@ -39,17 +39,33 @@ export default function HomePage() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+      localStorage.removeItem("onboardingComplete");
+
+      console.log("✅ Logout successful, localStorage cleared");
+
+      // Dispatch auth state change event BEFORE navigation
+      window.dispatchEvent(new Event('authStateChanged'));
 
       setIsLoading(false);
-      navigate("/");
+      
+      // Navigate to landing page
+      navigate("/", { replace: true });
+      
     } catch (error) {
       setIsLoading(false);
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
+      
       // Still clear localStorage and redirect even if API call fails
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
-      navigate("/");
+      localStorage.removeItem("onboardingComplete");
+      
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      // Navigate to landing page
+      navigate("/", { replace: true });
     }
   };
 
@@ -82,8 +98,11 @@ export default function HomePage() {
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Email:</strong> {user.email}</p>
           <p><strong>Role:</strong> {user.role}</p>
+          {user.department && <p><strong>Department:</strong> {user.department}</p>}
+          {user.year && <p><strong>Year:</strong> {user.year}</p>}
+          {user.division && <p><strong>Division:</strong> {user.division}</p>}
           {user.avatarUrl && (
-            <div>
+            <div style={{ marginTop: "1rem" }}>
               <p><strong>Avatar:</strong></p>
               <img
                 src={user.avatarUrl}
@@ -93,6 +112,7 @@ export default function HomePage() {
                   height: "100px",
                   borderRadius: "50%",
                   objectFit: "cover",
+                  marginTop: "0.5rem"
                 }}
               />
             </div>
