@@ -114,9 +114,7 @@ function App() {
         <Route path="/login" element={<AuthRoute element={<Login/>}/>}/>
         <Route path="/signup" element={<AuthRoute element={<Signup/>}/>}/>
         <Route path="/forgot-password" element={<AuthRoute element={<ForgotPassword/>}/>}/>
-        {/* Onboarding doesn't require onboarding to be complete */}
         <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding/>} requireOnboarding={false} />}/>
-        {/* Home requires onboarding to be complete */}
         <Route path="/home" element={<ProtectedRoute element={<HomePage/>} requireOnboarding={true} />}/>
       </Routes>
     </BrowserRouter>
