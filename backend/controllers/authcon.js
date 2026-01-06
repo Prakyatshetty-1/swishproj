@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from './firebase.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || ' ';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || ' ';
@@ -166,6 +168,71 @@ export const refreshAccessToken = async (req, res) => {
   } catch (error) {
     console.error('Refresh token error:', error);
     res.status(401).json({ message: 'Invalid refresh token', error: error.message });
+  }
+};
+
+// GOOGLE SIGNIN
+export const googleSignIn = async (req, res) => {
+  try {
+    const { idToken, email, name, photoURL } = req.body;
+
+    if (!idToken || !email) {
+      return res.status(400).json({ message: 'ID token and email are required' });
+    }
+
+    // Check if user exists
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      // Create new user from Google sign in
+      user = new User({
+        name: name || '',
+        email: email.toLowerCase(),
+        passwordHash: null, // No password for Google auth users
+        avatarUrl: photoURL || null,
+        role: 'student', // Default role
+        googleId: idToken,
+      });
+      await user.save();
+      console.log(`✅ New user created via Google Sign In: ${email}`);
+    } else {
+      // Update existing user with Google profile info
+      if (!user.avatarUrl && photoURL) {
+        user.avatarUrl = photoURL;
+      }
+      if (!user.googleId) {
+        user.googleId = idToken;
+      }
+      await user.save();
+      console.log(`✅ User logged in via Google: ${email}`);
+    }
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    // Save refresh token to database
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    res.status(200).json({
+      message: 'Google sign in successful',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        year: user.year,
+        division: user.division,
+        avatarUrl: user.avatarUrl,
+        onboardingComplete: user.onboardingComplete,
+      },
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    res.status(500).json({ message: 'Error with Google sign in', error: error.message });
   }
 };
 

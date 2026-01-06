@@ -4,6 +4,7 @@ import axios from "axios";
 import { Button } from "../components/ui/Button"; 
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import Logo from "../components/ui/Logo";
+import { signInWithGoogle } from "../lib/googleAuth";
 
 import "../styles/Login.css";
 
@@ -152,7 +153,26 @@ export default function Login() {
         </div>
 
         <div className="social-grid">
-          <button className="social-btn">
+          <button 
+            type="button"
+            className="social-btn"
+            onClick={async () => {
+              setIsLoading(true);
+              setError("");
+              try {
+                const result = await signInWithGoogle();
+                // Redirect after successful login
+                setTimeout(() => {
+                  navigate("/home", { replace: true });
+                }, 50);
+              } catch (err) {
+                setIsLoading(false);
+                setError(err.message || "Google sign in failed. Please try again.");
+                console.error("Google sign in error:", err);
+              }
+            }}
+            disabled={isLoading}
+          >
             {/* Google Icon */}
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
