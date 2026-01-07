@@ -217,10 +217,17 @@ export default function Signup() {
               setError("");
               try {
                 const result = await signInWithGoogle();
-                // Redirect after successful signup/login
-                setTimeout(() => {
-                  navigate("/home", { replace: true });
-                }, 50);
+                // If Google account has no password yet, redirect user to set one
+                if (result?.user && result.user.hasPassword === false) {
+                  setTimeout(() => {
+                    navigate('/set-password', { replace: true });
+                  }, 50);
+                } else {
+                  // Redirect after successful signup/login
+                  setTimeout(() => {
+                    navigate("/home", { replace: true });
+                  }, 50);
+                }
               } catch (err) {
                 setIsLoading(false);
                 setError(err.message || "Google sign in failed. Please try again.");

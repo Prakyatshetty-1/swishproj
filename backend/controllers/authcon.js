@@ -171,6 +171,48 @@ export const refreshAccessToken = async (req, res) => {
   }
 };
 
+// SET PASSWORD (for users created via Google auth who initially had no password)
+export const setPassword = async (req, res) => {
+  try {
+    const { userId, password } = req.body;
+
+    if (!userId || !password) {
+      return res.status(400).json({ message: 'Please provide userId and password' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Hash and save password
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(password, salt);
+    await user.save();
+
+    console.log(`✅ Password set for user: ${user.email}`);
+
+    res.status(200).json({
+      message: 'Password set successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        year: user.year,
+        division: user.division,
+        avatarUrl: user.avatarUrl,
+        onboardingComplete: user.onboardingComplete,
+        hasPassword: true,
+      },
+    });
+  } catch (error) {
+    console.error('Set password error:', error);
+    res.status(500).json({ message: 'Error setting password', error: error.message });
+  }
+};
+
 // GOOGLE SIGNIN
 export const googleSignIn = async (req, res) => {
   try {
@@ -226,6 +268,7 @@ export const googleSignIn = async (req, res) => {
         division: user.division,
         avatarUrl: user.avatarUrl,
         onboardingComplete: user.onboardingComplete,
+        hasPassword: !!user.passwordHash,
       },
       accessToken,
       refreshToken,

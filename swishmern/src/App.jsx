@@ -6,6 +6,7 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import Onboarding from './pages/Onboarding'
 import HomePage from './pages/HomePage'
+import SetPassword from './components/SetPassword'
 import './App.css'
 
 function App() {
@@ -115,6 +116,7 @@ function App() {
         <Route path="/signup" element={<AuthRoute element={<Signup/>}/>}/>
         <Route path="/forgot-password" element={<AuthRoute element={<ForgotPassword/>}/>}/>
         <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding/>} requireOnboarding={false} />}/>
+        <Route path="/set-password" element={<ProtectedRoute element={<SetPassword/>} requireOnboarding={false} />}/>
         <Route path="/home" element={<ProtectedRoute element={<HomePage/>} requireOnboarding={true} />}/>
       </Routes>
     </BrowserRouter>
