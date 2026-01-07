@@ -1,28 +1,36 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "../components/ui/Button"; 
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Camera } from "lucide-react";
 import Logo from "../components/ui/Logo";
+import { signInWithGoogle } from "../lib/googleAuth";
 
 import "../styles/Signup.css";
+
+const API_BASE_URL = "http://localhost:5000/api";
 
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   
   // State for Form Data
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    role: "student",
   });
 
   // State for Profile Image Preview
   const [profileImage, setProfileImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(""); // Clear error when user starts typing
   }
 
   // Handle Image Selection
@@ -31,19 +39,59 @@ export default function Signup() {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setProfileImage(imageUrl);
+      setImageFile(file);
     }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Simulate signup process
-    setTimeout(() => {
+    try {
+      // Convert image to base64 if exists
+      let avatarUrl = null;
+      
+      if (imageFile) {
+        avatarUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(imageFile);
+        });
+      }
+      
+      // Submit signup
+      const response = await axios.post(`${API_BASE_URL}/auth/signup`, {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        avatarUrl: avatarUrl,
+      });
+
+      // Store tokens and user info in localStorage
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // DO NOT set onboardingComplete here - user needs to complete onboarding first
+      localStorage.removeItem("onboardingComplete");
+
+      console.log("✅ Signup successful, tokens stored");
+
       setIsLoading(false);
-      alert("Sign Up Successful!");
-      navigate("/onboarding"); 
-    }, 1500);
+      
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      // Navigate to onboarding
+      navigate("/onboarding", { replace: true });
+
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.response?.data?.message || err.message || "Signup failed. Please try again.");
+      console.error("❌ Signup error:", err);
+    }
   }
 
   return (
@@ -84,6 +132,7 @@ export default function Signup() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {error && <div className="error-message" style={{color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}
           
           {/* Full Name */}
           <div className="form-group">
@@ -160,7 +209,33 @@ export default function Signup() {
 
         {/* Social Buttons */}
         <div className="social-grid">
-          <button className="social-btn">
+          <button 
+            type="button"
+            className="social-btn"
+            onClick={async () => {
+              setIsLoading(true);
+              setError("");
+              try {
+                const result = await signInWithGoogle();
+                // If new Google signup, redirect to set password
+                if (result?.user && result.user.passwordSetupRequired === true) {
+                  setTimeout(() => {
+                    navigate('/set-password', { replace: true });
+                  }, 50);
+                } else {
+                  // Redirect after successful signup/login
+                  setTimeout(() => {
+                    navigate("/home", { replace: true });
+                  }, 50);
+                }
+              } catch (err) {
+                setIsLoading(false);
+                setError(err.message || "Google sign in failed. Please try again.");
+                console.error("Google sign in error:", err);
+              }
+            }}
+            disabled={isLoading}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
