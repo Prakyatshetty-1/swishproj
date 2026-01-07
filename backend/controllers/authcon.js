@@ -1,8 +1,6 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from './firebase.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || ' ';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || ' ';
