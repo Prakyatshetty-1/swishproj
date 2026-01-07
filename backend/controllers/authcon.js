@@ -188,6 +188,7 @@ export const setPassword = async (req, res) => {
     // Hash and save password
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(password, salt);
+    user.passwordSetupRequired = false; // Mark password setup as complete
     await user.save();
 
     console.log(`✅ Password set for user: ${user.email}`);
@@ -204,7 +205,7 @@ export const setPassword = async (req, res) => {
         division: user.division,
         avatarUrl: user.avatarUrl,
         onboardingComplete: user.onboardingComplete,
-        hasPassword: true,
+        passwordSetupRequired: false,
       },
     });
   } catch (error) {
@@ -234,6 +235,7 @@ export const googleSignIn = async (req, res) => {
         avatarUrl: photoURL || null,
         role: 'student', // Default role
         googleId: idToken,
+        passwordSetupRequired: true, // New Google users must set a password
       });
       await user.save();
       console.log(`✅ New user created via Google Sign In: ${email}`);
@@ -268,7 +270,7 @@ export const googleSignIn = async (req, res) => {
         division: user.division,
         avatarUrl: user.avatarUrl,
         onboardingComplete: user.onboardingComplete,
-        hasPassword: !!user.passwordHash,
+        passwordSetupRequired: user.passwordSetupRequired,
       },
       accessToken,
       refreshToken,

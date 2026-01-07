@@ -217,8 +217,8 @@ export default function Signup() {
               setError("");
               try {
                 const result = await signInWithGoogle();
-                // If Google account has no password yet, redirect user to set one
-                if (result?.user && result.user.hasPassword === false) {
+                // If new Google signup, redirect to set password
+                if (result?.user && result.user.passwordSetupRequired === true) {
                   setTimeout(() => {
                     navigate('/set-password', { replace: true });
                   }, 50);

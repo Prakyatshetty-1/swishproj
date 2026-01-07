@@ -53,6 +53,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    passwordSetupRequired: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
