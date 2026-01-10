@@ -1,0 +1,212 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+@media (max-width: 1400px) {
+  .app-container {
+    flex-wrap: wrap;
+  }
+}
+
+
+
+.feed {
+  flex: 1;
+  max-width: 920px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+@media (max-width: 1400px) {
+  .feed {
+    max-width: 100%;
+  }
+}
+
+.post {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: box-shadow 0.2s;
+}
+
+.post:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.post-author-info {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.author-name-role {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.author-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+/* Updated role badge styling to include icon */
+.author-role-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.author-role-badge svg {
+  flex-shrink: 0;
+}
+
+.post-time {
+  font-size: 12px;
+  color: #6366f1;
+}
+
+.more-options {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px 8px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more-options:hover {
+  color: #6b7280;
+}
+
+/* Updated icon styling for more-options */
+.more-options svg {
+  flex-shrink: 0;
+}
+
+.post-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 500px;
+  object-fit: cover;
+}
+
+.post-engagement {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.post-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Updated action button styling for lucide icons */
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.action-btn:hover {
+  transform: scale(1.2);
+  color: #111827;
+}
+
+.action-btn svg {
+  flex-shrink: 0;
+}
+
+.bookmark-btn {
+  margin-left: auto;
+}
+
+.post-stats {
+  display: flex;
+  align-items: center;
+}
+
+.likes-count {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
+.post-caption {
+  margin: 0;
+}
+
+.post-caption p {
+  font-size: 14px;
+  color: #374151;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.post-caption strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.view-comments {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 0.2s;
+}
+
+.view-comments:hover {
+  color: #111827;
+}

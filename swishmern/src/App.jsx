@@ -6,6 +6,8 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import Onboarding from './pages/Onboarding'
 import HomePage from './pages/HomePage'
+import Home from './pages/Home'
+import ProfilePage from './pages/ProfilePage'
 import SetPassword from './components/SetPassword'
 import './App.css'
 
@@ -118,6 +120,9 @@ function App() {
         <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding/>} requireOnboarding={false} />}/>
         <Route path="/set-password" element={<ProtectedRoute element={<SetPassword/>} requireOnboarding={false} />}/>
         <Route path="/home" element={<ProtectedRoute element={<HomePage/>} requireOnboarding={true} />}/>
+        <Route path="/homee" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
+        <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
+
       </Routes>
     </BrowserRouter>
   )
