@@ -1,6 +1,4 @@
-/* src/styles/Onboarding.css */
 
-/* Reuse base auth layout */
 .onboarding-page {
   position: relative;
   display: flex;
@@ -21,7 +19,7 @@
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   border: 1px solid #f1f5f9;
   text-align: center;
-  min-height: 400px; /* Ensures height doesn't jump too much */
+  min-height: 400px; 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -33,7 +31,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Header Text */
+
 .onboarding-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -47,7 +45,7 @@
   margin-bottom: 32px;
 }
 
-/* Progress Bar */
+
 .progress-container {
   width: 100%;
   height: 6px;
@@ -63,7 +61,7 @@
   transition: width 0.3s ease;
 }
 
-/* --- Selection Grid (For Roles, Departments) --- */
+
 .selection-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -71,7 +69,6 @@
   margin-bottom: 24px;
 }
 
-/* Option Card (The Big Buttons) */
 .option-card {
   display: flex;
   flex-direction: column;
@@ -108,10 +105,10 @@
   font-size: 0.95rem;
 }
 
-/* --- Simple List (For Year/Division) --- */
+
 .list-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columns for years */
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
@@ -136,11 +133,10 @@
   border-color: #2563EB;
 }
 
-/* Navigation Buttons */
 .nav-buttons {
   display: flex;
   justify-content: space-between;
-  margin-top: auto; /* Pushes to bottom */
+  margin-top: auto;
   padding-top: 24px;
   border-top: 1px solid #f1f5f9;
 }

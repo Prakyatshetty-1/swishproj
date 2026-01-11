@@ -1,6 +1,4 @@
-/* src/styles/Signup.css */
 
-/* --- Page Layout (Same as Login) --- */
 .auth-page {
   position: relative;
   display: flex;
@@ -12,7 +10,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* Logo Positioning */
+
 .auth-logo-container {
   position: fixed;
   top: 24px;
@@ -20,10 +18,10 @@
   z-index: 50;
 }
 
-/* --- Card Design --- */
+
 .signup-card {
   width: 100%;
-  max-width: 440px; /* Slightly wider than login to fit content comfortably */
+  max-width: 440px; 
   background: white;
   border-radius: 24px;
   padding: 40px;
@@ -54,7 +52,7 @@
   font-size: 0.95rem;
 }
 
-/* --- Profile Upload Section (NEW) --- */
+
 .profile-upload-section {
   display: flex;
   justify-content: center;
@@ -111,7 +109,7 @@
   transform: scale(1.1);
 }
 
-/* --- Form Elements (Shared) --- */
+
 .form-group {
   margin-bottom: 20px;
   text-align: left;
@@ -169,7 +167,7 @@
   padding: 0;
 }
 
-/* --- Buttons & Dividers --- */
+
 .submit-btn {
   width: 100%;
   margin-top: 8px;
@@ -228,7 +226,7 @@
   border-color: #cbd5e1;
 }
 
-/* --- Footer --- */
+
 .auth-footer-text {
   text-align: center;
   font-size: 0.75rem;

@@ -24,11 +24,9 @@
   background: linear-gradient(to right, #2563EB, #4F46E5);
   -webkit-background-clip: text;
   color: transparent; 
-  /* Fallback for browsers that don't support text clip */
   color: #1e293b; 
 }
 
-/* Ensure text gradient works in WebKit browsers */
 @supports (-webkit-background-clip: text) {
   .logo-text {
     background: linear-gradient(to right, #2563EB, #4F46E5);

@@ -1,0 +1,61 @@
+.settings-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.settings-page-title { margin-bottom: 24px; font-size: 1.5rem; color: #0f172a; }
+
+.settings-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2563EB;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Profile Row */
+.profile-row { display: flex; align-items: center; gap: 16px; }
+.settings-avatar { width: 56px; height: 56px; border-radius: 50%; }
+.profile-details h3 { font-size: 1rem; color: #0f172a; margin: 0; }
+.profile-details p { font-size: 0.85rem; color: #64748b; margin: 2px 0; }
+.edit-link { color: #2563EB; background: none; border: none; font-size: 0.85rem; cursor: pointer; padding: 0; }
+
+
+.setting-row, .setting-action-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+}
+.setting-row:last-child, .setting-action-row:last-child { border-bottom: none; }
+
+.setting-label { color: #334155; font-size: 0.95rem; }
+
+.setting-action-row {
+  width: 100%; background: none; border: none; border-bottom: 1px solid #f1f5f9;
+  cursor: pointer; color: #334155; font-size: 0.95rem; text-align: left;
+}
+.chevron { color: #94a3b8; }
+
+
+.logout-big-btn {
+  width: 100%; padding: 14px; background-color: #fef2f2; color: #dc2626;
+  border: 1px solid #fee2e2; border-radius: 12px; font-weight: 600;
+  cursor: pointer; margin-top: 20px;
+}
+
+
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #2563EB; }
+input:checked + .slider:before { transform: translateX(20px); }
