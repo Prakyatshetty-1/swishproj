@@ -127,8 +127,7 @@ function App() {
         <Route path="/forgot-password" element={<AuthRoute element={<ForgotPassword/>}/>}/>
         <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding/>} requireOnboarding={false} />}/>
         <Route path="/set-password" element={<ProtectedRoute element={<SetPassword/>} requireOnboarding={false} />}/>
-        <Route path="/home" element={<ProtectedRoute element={<HomePage/>} requireOnboarding={true} />}/>
-        <Route path="/homee" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
+        <Route path="/home" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
         <Route path="/explore" element={<ProtectedRoute element={<Explore/>} requireOnboarding={true} />}/>
         <Route path="/events" element={<ProtectedRoute element={<Events/>} requireOnboarding={true} />}/>
         <Route path="/create-post" element={<ProtectedRoute element={<CreatePost/>} requireOnboarding={true} />}/>

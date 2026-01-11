@@ -1,22 +1,73 @@
 import React from 'react';
+import { useState,useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays } from 'lucide-react';
 import Logo from './ui/Logo';
-import '../styles/Sidebar.css';
-
-// Mock Current User
-const currentUser = {
-  name: "Sarah Johnson",
-  role: "student", 
-  avatar: "https://ui-avatars.com/api/?name=Sarah+J&background=0D8ABC&color=fff"
-};
+import '../styles/sidebar.css';
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogout = () => {
-    navigate('/login');
+  useEffect(() => {
+      // Get user info from localStorage
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        // Redirect to login if not authenticated
+        navigate("/login");
+      }
+    }, [navigate]);
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      const userId = user?.id || user?._id;
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (userId && refreshToken) {
+        // Call logout API
+        await axios.post(`${API_BASE_URL}/auth/logout`, {
+          userId: userId,
+          refreshToken: refreshToken,
+        });
+      }
+
+      // Clear localStorage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("onboardingComplete");
+
+      console.log("✅ Logout successful, localStorage cleared");
+
+      // Dispatch auth state change event BEFORE navigation
+      window.dispatchEvent(new Event('authStateChanged'));
+
+      setIsLoading(false);
+      
+      // Navigate to landing page
+      navigate("/", { replace: true });
+      
+    } catch (error) {
+      setIsLoading(false);
+      console.error("❌ Logout error:", error);
+      
+      // Still clear localStorage and redirect even if API call fails
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("onboardingComplete");
+      
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      // Navigate to landing page
+      navigate("/", { replace: true });
+    }
   };
 
   const NavItem = ({ icon: Icon, path, label }) => {
@@ -36,7 +87,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="sidebar-nav-section">
-        <NavItem icon={Home} path="/homee" label="Home" />
+        <NavItem icon={Home} path="/home" label="Home" />
         <NavItem icon={Search} path="/explore" label="Explore" />
         <NavItem icon={CalendarDays} path="/events" label="Events" />
         <NavItem icon={PlusSquare} path="/create-post" label="Create" />
@@ -48,7 +99,7 @@ export default function Sidebar() {
         <nav className="secondary-nav">
           <NavItem icon={Settings} path="/settings" label="Settings" />
           
-          {currentUser.role === 'admin' && (
+          {user?.role === 'admin' && (
             <NavItem icon={Shield} path="/admin" label="Admin" />
           )}
           
@@ -59,10 +110,10 @@ export default function Sidebar() {
         </nav>
 
         <div className="user-mini-profile">
-          <img src={currentUser.avatar} alt={currentUser.name} className="user-avatar-sm" />
+          <img src={user?.avatarUrl} alt={user?.name} className="user-avatar-sm" />
           <div className="user-info-text">
-            <p className="u-name">{currentUser.name}</p>
-            <p className="u-role">{currentUser.role}</p>
+            <p className="u-name">{user?.name}</p>
+            <p className="u-role">{user?.role}</p>
           </div>
         </div>
       </div>

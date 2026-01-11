@@ -122,7 +122,7 @@ export default function HomePage() {
 
       <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
         <button
-          onClick={() => navigate("/homee")}
+          onClick={() => navigate("/home")}
           style={{
             padding: "0.5rem 2rem",
             backgroundColor: "#3b82f6",
