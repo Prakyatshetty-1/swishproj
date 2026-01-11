@@ -1,0 +1,237 @@
+.events-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.events-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.events-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background-color: #eff6ff;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563EB;
+}
+
+.events-title h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.events-title p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+
+.events-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 32px;
+}
+
+@media (max-width: 1024px) {
+  .events-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.tabs-header {
+  display: flex;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab-btn.active {
+  background-color: white;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.count-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background-color: #2563EB;
+  color: white;
+}
+
+.count-badge.green { background-color: #10b981; }
+
+/* Event Cards */
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.event-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.event-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.event-details {
+  flex: 1;
+}
+
+.event-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.event-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.category-badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+/* Category Colors */
+.cat-academic { background: #eff6ff; color: #2563EB; }
+.cat-career { background: #ecfeff; color: #06b6d4; }
+.cat-sports { background: #f0fdf4; color: #22c55e; }
+.cat-social { background: #fdf2f8; color: #db2777; }
+.cat-cultural { background: #faf5ff; color: #a855f7; }
+.cat-workshop { background: #fff7ed; color: #ea580c; }
+
+.event-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.event-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Right Sidebar Calendar */
+.calendar-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+/* React Calendar Overrides to match design */
+.react-calendar {
+  width: 100%;
+  border: none;
+  font-family: 'Inter', sans-serif;
+}
+.react-calendar__navigation button {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.react-calendar__tile {
+  padding: 10px 6px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+.react-calendar__tile--now {
+  background: #eff6ff;
+  color: #2563EB;
+}
+.react-calendar__tile--active {
+  background: #2563EB !important;
+  color: white !important;
+}
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Selected Day Events */
+.selected-day-events {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.mini-event {
+  padding: 8px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.mini-event h4 { font-size: 0.9rem; font-weight: 600; color: #0f172a; margin: 0;}
+.mini-event p { font-size: 0.8rem; color: #64748b; margin: 2px 0 0; }
