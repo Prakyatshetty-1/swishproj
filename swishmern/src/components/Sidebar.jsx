@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield } from 'lucide-react';
+import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays } from 'lucide-react';
 import Logo from './ui/Logo';
 import '../styles/Sidebar.css';
 
@@ -38,6 +38,7 @@ export default function Sidebar() {
       <nav className="sidebar-nav-section">
         <NavItem icon={Home} path="/homee" label="Home" />
         <NavItem icon={Search} path="/explore" label="Explore" />
+        <NavItem icon={CalendarDays} path="/events" label="Events" />
         <NavItem icon={PlusSquare} path="/create-post" label="Create" />
         <NavItem icon={Bell} path="/notifications" label="Notifications" />
         <NavItem icon={User} path="/profile" label="Profile" />

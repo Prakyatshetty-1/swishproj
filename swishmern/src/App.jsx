@@ -10,6 +10,7 @@ import Onboarding from './pages/Onboarding'
 import HomePage from './pages/HomePage'
 import Home from './pages/Home'
 import Explore from './pages/Explore'
+import Events from './pages/Events'
 import CreatePost from './pages/CreatePost'
 import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
@@ -129,6 +130,7 @@ function App() {
         <Route path="/home" element={<ProtectedRoute element={<HomePage/>} requireOnboarding={true} />}/>
         <Route path="/homee" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
         <Route path="/explore" element={<ProtectedRoute element={<Explore/>} requireOnboarding={true} />}/>
+        <Route path="/events" element={<ProtectedRoute element={<Events/>} requireOnboarding={true} />}/>
         <Route path="/create-post" element={<ProtectedRoute element={<CreatePost/>} requireOnboarding={true} />}/>
         <Route path="/notifications" element={<ProtectedRoute element={<Notifications/>} requireOnboarding={true} />}/>
         <Route path="/settings" element={<ProtectedRoute element={<Settings/>} requireOnboarding={true} />}/>
