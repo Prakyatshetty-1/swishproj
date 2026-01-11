@@ -1,16 +1,15 @@
-/* --- Page Layout --- */
 .auth-page {
-  position: relative; /* Needed for absolute positioning of logo */
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background-color: #ffffff; /* Clean light background */
+  background-color: #ffffff;
   font-family: 'Inter', sans-serif;
 }
 
-/* Logo Positioning for Auth Pages */
+
 .auth-logo-container {
   position: fixed;
   top: 24px;
@@ -18,14 +17,14 @@
   z-index: 50;
 }
 
-/* --- Login Card --- */
+
 .login-card {
   width: 100%;
   max-width: 420px;
   background: white;
   border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08); /* Soft, modern shadow */
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   border: 1px solid #f1f5f9;
 }
 
@@ -46,7 +45,6 @@
   font-size: 1rem;
 }
 
-/* --- Form Elements --- */
 .form-group {
   margin-bottom: 20px;
   text-align: left;
@@ -57,7 +55,7 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 12px;
-  margin-bottom: 24px; /* Space before submit button */
+  margin-bottom: 24px;
 }
 
 .form-label {
@@ -101,7 +99,7 @@
   height: 16px;
   border-radius: 4px;
   border: 1px solid #cbd5e1;
-  accent-color: #2563EB; /* Matches your brand blue */
+  accent-color: #2563EB;
   cursor: pointer;
 }
 
@@ -121,7 +119,7 @@
 .form-input {
   width: 100%;
   height: 48px;
-  padding: 0 16px 0 44px; /* Space for icon */
+  padding: 0 16px 0 44px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   font-size: 0.95rem;
@@ -154,7 +152,7 @@
   margin-top: 0;
 }
 
-/* --- Divider --- */
+
 .divider {
   position: relative;
   text-align: center;
@@ -181,7 +179,7 @@
   font-size: 0.85rem;
 }
 
-/* --- Social Buttons --- */
+
 .social-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -209,7 +207,6 @@
   border-color: #cbd5e1;
 }
 
-/* --- Footer --- */
 .auth-footer {
   text-align: center;
   margin-top: 24px;

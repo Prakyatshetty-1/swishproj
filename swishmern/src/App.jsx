@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Layout from './components/Layout'
+
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -7,6 +9,10 @@ import ForgotPassword from './pages/ForgotPassword'
 import Onboarding from './pages/Onboarding'
 import HomePage from './pages/HomePage'
 import Home from './pages/Home'
+import Explore from './pages/Explore'
+import CreatePost from './pages/CreatePost'
+import Notifications from './pages/Notifications'
+import Settings from './pages/Settings'
 import ProfilePage from './pages/ProfilePage'
 import SetPassword from './components/SetPassword'
 import './App.css'
@@ -113,6 +119,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+
         <Route path="/" element={<RootRoute />}/>
         <Route path="/login" element={<AuthRoute element={<Login/>}/>}/>
         <Route path="/signup" element={<AuthRoute element={<Signup/>}/>}/>
@@ -121,6 +128,10 @@ function App() {
         <Route path="/set-password" element={<ProtectedRoute element={<SetPassword/>} requireOnboarding={false} />}/>
         <Route path="/home" element={<ProtectedRoute element={<HomePage/>} requireOnboarding={true} />}/>
         <Route path="/homee" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
+        <Route path="/explore" element={<ProtectedRoute element={<Explore/>} requireOnboarding={true} />}/>
+        <Route path="/create-post" element={<ProtectedRoute element={<CreatePost/>} requireOnboarding={true} />}/>
+        <Route path="/notifications" element={<ProtectedRoute element={<Notifications/>} requireOnboarding={true} />}/>
+        <Route path="/settings" element={<ProtectedRoute element={<Settings/>} requireOnboarding={true} />}/>
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
 
       </Routes>

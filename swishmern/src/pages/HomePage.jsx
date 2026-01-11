@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../styles/HomePage.css";
+import "../styles/Home.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -119,6 +119,24 @@ export default function HomePage() {
           )}
         </div>
       )}
+
+      <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
+        <button
+          onClick={() => navigate("/homee")}
+          style={{
+            padding: "0.5rem 2rem",
+            backgroundColor: "#3b82f6",
+            color: "white",
+            border: "none",
+            borderRadius: "0.375rem",
+            cursor: "pointer",
+            fontSize: "1rem",
+            fontWeight: "500"
+          }}
+        >
+          Close
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { Heart, MessageCircle } from "lucide-react"
 import "../styles/post-grid.css"
