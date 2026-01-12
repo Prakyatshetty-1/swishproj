@@ -20,7 +20,7 @@ export default function Sidebar() {
         // Redirect to login if not authenticated
         navigate("/login");
       }
-    }, [navigate]);
+  }, [navigate]);
 
   const handleLogout = async () => {
     setIsLoading(true);

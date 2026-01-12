@@ -1,22 +1,43 @@
 import React from "react"
+import { useState,useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
 import ProfileHeader from "../components/ProfileHeader"
 import ProfileTabs from "../components/ProfileTabs"
 import PostsGrid from "../components/PostsGrid"
+import EditProfile from "../components/EditProfile"
 import "../styles/profile.css"
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  useEffect(() => {
+    // Get user info from localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      // Redirect to login if not authenticated
+      navigate("/login");
+    }
+  }, [navigate]);
+
+
+
+
   const userData = {
-    name: "Prof. James Chen",
-    username: "@prof.chen",
-    role: "Faculty",
-    bio: "Physics Department | Quantum Computing Researcher | Coffee enthusiast ☕",
+    name: user?.name,
+    role: user?.role,
+    bio: `${user?.year} | ${user?.department}| Div ${user?.division}`,
     location: "Campus, University",
     website: "campus.edu",
     posts: 156,
     followers: 1523,
     following: 234,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Prof",
+    avatar: user?.avatarUrl || "/placeholder.svg",
   }
 
   const userPosts = [
@@ -48,16 +69,42 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = React.useState("posts")
 
+  const handleEditSave = (updatedUser) => {
+    setUser(updatedUser)
+  }
+
+  if (!user) {
+    return (
+      <div className="app-container">
+        <Sidebar />
+        <div className="profile-main">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="app-container">
       <Sidebar />
       <div className="profile-main">
-        <ProfileHeader userData={userData} />
+        <ProfileHeader 
+          userData={userData} 
+          onEditClick={() => setIsEditModalOpen(true)}
+        />
         <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {activeTab === "posts" && <PostsGrid posts={userPosts} />}
         {activeTab === "saved" && <PostsGrid posts={userPosts.slice(0, 1)} />}
       </div>
+
+      {isEditModalOpen && (
+        <EditProfile
+          user={user}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleEditSave}
+        />
+      )}
     </div>
   )
 }
