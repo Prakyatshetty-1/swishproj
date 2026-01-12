@@ -1,5 +1,6 @@
 import express from 'express';
-import { signup, login, logout, refreshAccessToken, saveOnboarding, googleSignIn, setPassword, updateProfile } from '../controllers/authcon.js';
+import { signup, login, logout, refreshAccessToken, saveOnboarding, googleSignIn, setPassword} from '../controllers/authcon.js';
+import { updateProfile } from '../controllers/profilecon.js';
 
 const router = express.Router();
 
