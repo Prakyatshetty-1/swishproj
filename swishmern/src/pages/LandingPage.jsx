@@ -1,13 +1,8 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button"; // Assumes you updated this to the CSS version
 import { ArrowRight, Users, Shield, Zap, Heart, Sparkles } from "lucide-react";
-
-// Animations
 import SplitText from "../components/ui/SplitText";
 import Iridescence from "../components/ui/Iridescence";
-
-// The Styles
 import "../styles/Landing.css"; 
 
 export default function Landing() {

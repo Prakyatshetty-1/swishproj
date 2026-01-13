@@ -39,6 +39,10 @@ export const signup = async (req, res) => {
       passwordHash,
       role,
       avatarUrl,
+      posts: 0,
+      followers: 0,
+      following: 0,
+      about: 'Hi there!',
     });
 
     await newUser.save();
@@ -58,6 +62,10 @@ export const signup = async (req, res) => {
         email: newUser.email,
         role: newUser.role,
         avatarUrl: newUser.avatarUrl,
+        posts: newUser.posts,
+        followers: newUser.followers,
+        following: newUser.following,
+        about: newUser.about,
       },
       accessToken,
       refreshToken,
@@ -327,3 +335,5 @@ export const saveOnboarding = async (req, res) => {
     res.status(500).json({ message: 'Error saving onboarding data', error: error.message });
   }
 };
+
+// UPDATE PROFILE

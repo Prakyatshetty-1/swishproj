@@ -6,6 +6,7 @@ import Logo from '../components/ui/Logo';
 import '../styles/Onboarding.css';
 
 const API_BASE_URL = "http://localhost:5000/api";
+const DEPARTMENTS = ['Information Tech', 'Computer Science', 'AI & DS', 'AI & ML','Mechanical', 'Civil'];
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -127,7 +128,7 @@ export default function Onboarding() {
       <p className="onboarding-subtitle">Select your engineering branch</p>
 
       <div className="list-grid">
-        {['Information Tech', 'Computer Science', 'AI & DS', 'AI & ML','Mechanical', 'Civil'].map((dept) => (
+        {DEPARTMENTS.map((dept) => (
           <button
             key={dept}
             className={`list-btn ${data.department === dept ? 'selected' : ''}`}
