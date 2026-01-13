@@ -1,15 +1,17 @@
 import User from '../models/User.js';
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import sharp from 'sharp';
 
 // Load environment variables
 dotenv.config();
 
-// Configure Cloudinary with explicit environment variables
+// Configure Cloudinary with explicit environment variables and timeout settings
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  timeout: 60000, // 60 second timeout
 });
 
 // Log configuration (remove in production)
@@ -42,14 +44,19 @@ export const updateProfile = async (req, res) => {
         // Check if avatarUrl is a data URL (base64) or a URL
         if (avatarUrl.startsWith('data:')) {
           console.log('📸 Uploading image to Cloudinary...');
-          // Upload to Cloudinary
-          const result = await cloudinary.uploader.upload(avatarUrl, {
+          
+          // Compress image before upload
+          const compressedImage = await compressBase64Image(avatarUrl);
+          
+          // Upload to Cloudinary with increased timeout
+          const result = await cloudinary.uploader.upload(compressedImage, {
             folder: 'swish/profiles',
             resource_type: 'auto',
             width: 500,
             height: 500,
             crop: 'fill',
             quality: 'auto',
+            timeout: 60000,
           });
           console.log('✅ Image uploaded successfully:', result.secure_url);
           updateData.avatarUrl = result.secure_url;
@@ -100,5 +107,27 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Error updating profile', error: error.message });
+  }
+};
+
+// Helper function to compress base64 images using sharp
+const compressBase64Image = async (base64String) => {
+  try {
+    // Extract the base64 data (remove data:image/...;base64, prefix)
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Compress with sharp
+    const compressedBuffer = await sharp(buffer)
+      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    
+    // Convert back to base64 data URL
+    return `data:image/jpeg;base64,${compressedBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error('Image compression error:', error);
+    // Return original if compression fails
+    return base64String;
   }
 };

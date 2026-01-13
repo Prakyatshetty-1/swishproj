@@ -336,4 +336,42 @@ export const saveOnboarding = async (req, res) => {
   }
 };
 
+// GET ALL USERS
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, {
+      name: 1,
+      email: 1,
+      avatarUrl: 1,
+      role: 1,
+      about: 1,
+      department: 1,
+      year: 1,
+      followers: 1,
+      following: 1,
+      posts: 1,
+    }).lean();
+
+    res.status(200).json({
+      message: 'Users fetched successfully',
+      users: users.map((user) => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+        about: user.about,
+        department: user.department,
+        year: user.year,
+        followers: user.followers,
+        following: user.following,
+        posts: user.posts,
+      })),
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+};
+
 // UPDATE PROFILE
