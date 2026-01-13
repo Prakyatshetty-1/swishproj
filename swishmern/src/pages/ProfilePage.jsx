@@ -31,12 +31,13 @@ export default function ProfilePage() {
   const userData = {
     name: user?.name,
     role: user?.role,
-    bio: `${user?.year} | ${user?.department}| Div ${user?.division}`,
+    about: user?.about || "Hi there!",
+    bio: `${user?.year} | ${user?.department} | Div ${user?.division}`,
     location: "Campus, University",
     website: "campus.edu",
-    posts: 156,
-    followers: 1523,
-    following: 234,
+    posts: user?.posts || 0,
+    followers: user?.followers || 0,
+    following: user?.following || 0,
     avatar: user?.avatarUrl || "/placeholder.svg",
   }
 

@@ -20,7 +20,16 @@ export default function ProfileHeader({ userData, onEditClick }) {
             <span className="profile-role">{userData.role}</span>
           </div>
 
-          <p className="profile-bio">{userData.bio}</p>
+          <div className="profile-sections">
+            <div className="profile-about">
+              <h3 className="section-title">About Me</h3>
+              <p className="section-content">{userData.about || "Hi there!"}</p>
+            </div>
+            <div className="profile-bio-section">
+              <h3 className="section-title">Bio</h3>
+              <p className="section-content">{userData.bio}</p>
+            </div>
+          </div>
 
           <div className="profile-meta">
             <div className="meta-item">

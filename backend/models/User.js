@@ -57,6 +57,22 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    posts: {
+      type: Number,
+      default: 0,
+    },
+    followers: {
+      type: Number,
+      default: 0,
+    },
+    following: {
+      type: Number,
+      default: 0,
+    },
+    about: {
+      type: String,
+      default: 'Hi there!',
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

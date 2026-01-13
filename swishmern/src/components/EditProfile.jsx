@@ -10,6 +10,7 @@ export default function EditProfile({ user, onClose, onSave }) {
     year: user?.year || "",
     department: user?.department || "",
     division: user?.division || "",
+    about: user?.about || "Hi there!",
     avatarUrl: user?.avatarUrl || "/placeholder.svg",
   })
 
@@ -57,6 +58,7 @@ export default function EditProfile({ user, onClose, onSave }) {
           year: formData.year,
           department: formData.department,
           division: formData.division,
+          about: formData.about,
           avatarUrl: formData.avatarUrl,
         }),
       })
@@ -140,6 +142,7 @@ export default function EditProfile({ user, onClose, onSave }) {
             <input
               type="text"
               id="name"
+              className="input1"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
@@ -153,6 +156,7 @@ export default function EditProfile({ user, onClose, onSave }) {
             <select
               id="year"
               name="year"
+              className="select1"
               value={formData.year}
               onChange={handleInputChange}
               required={!isFaculty}
@@ -171,6 +175,7 @@ export default function EditProfile({ user, onClose, onSave }) {
             <select
               id="department"
               name="department"
+              className="select1"
               value={formData.department}
               onChange={handleInputChange}
               required
@@ -190,6 +195,7 @@ export default function EditProfile({ user, onClose, onSave }) {
               <select
                 id="division"
                 name="division"
+                className="select1"
                 value={formData.division}
                 onChange={handleInputChange}
                 required={!isFaculty}
@@ -201,6 +207,19 @@ export default function EditProfile({ user, onClose, onSave }) {
               </select>
             </div>
           )}
+
+          <div className="form-group">
+            <label htmlFor="about">About Me</label>
+            <textarea
+              id="about"
+              className="input1"
+              name="about"
+              value={formData.about}
+              onChange={handleInputChange}
+              placeholder="Tell us about yourself"
+              rows="3"
+            ></textarea>
+          </div>
 
           {/* Buttons */}
           <div className="form-actions">

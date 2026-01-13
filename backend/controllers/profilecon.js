@@ -21,7 +21,7 @@ console.log('✅ Cloudinary Config:', {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { userId, name, year, department, division, avatarUrl } = req.body;
+    const { userId, name, year, department, division, avatarUrl, about } = req.body;
 
     // Validate inputs
     if (!userId) {
@@ -34,6 +34,7 @@ export const updateProfile = async (req, res) => {
     if (year) updateData.year = year;
     if (department) updateData.department = department;
     if (division) updateData.division = division;
+    if (about) updateData.about = about;
     
     // Handle avatar upload to Cloudinary if provided
     if (avatarUrl) {
@@ -92,6 +93,7 @@ export const updateProfile = async (req, res) => {
         year: user.year,
         division: user.division,
         avatarUrl: user.avatarUrl,
+        about: user.about,
         onboardingComplete: user.onboardingComplete,
       },
     });
