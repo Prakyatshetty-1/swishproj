@@ -82,6 +82,8 @@ export default function ProfilePage() {
         followers: freshUser.followers,
         following: freshUser.following,
         posts: freshUser.posts,
+        followingList: freshUser.followingList,
+        followersList: freshUser.followersList,
       };
       localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
@@ -105,13 +107,15 @@ export default function ProfilePage() {
       }
 
       const data = await response.json();
-      setViewedUser(data.user || data);
+      const fetchedUser = data.user || data;
+      setViewedUser(fetchedUser);
       setIsOwnProfile(false);
 
-      // Check if current user is following this user
+      // Check if current user is following this user by comparing IDs as strings
       if (user && user.followingList) {
-        const isCurrentlyFollowing = user.followingList.includes(id) || 
-                                     user.followingList.some(item => item._id === id);
+        const isCurrentlyFollowing = user.followingList.some(
+          (followId) => String(followId) === String(id)
+        );
         setIsFollowing(isCurrentlyFollowing);
       }
     } catch (error) {
@@ -125,6 +129,13 @@ export default function ProfilePage() {
 
   const handleFollow = async () => {
     if (!user || !viewedUser) return;
+    
+    console.log("🔗 FOLLOW REQUEST:", {
+      currentUserId: user.id || user._id,
+      targetUserId: viewedUser._id || viewedUser.id,
+      currentUser: user,
+      viewedUser: viewedUser
+    });
     
     try {
       setIsFollowLoading(true);
@@ -141,7 +152,16 @@ export default function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to follow user");
+        const errorData = await response.json();
+        console.error("Follow error response:", errorData);
+        // If already following, just update state to show unfollow
+        if (errorData.message === 'You are already following this user') {
+          console.log("✅ Already following, updating UI to show Unfollow");
+          setIsFollowing(true);
+          setIsFollowLoading(false);
+          return;
+        }
+        throw new Error(errorData.message || "Failed to follow user");
       }
 
       const data = await response.json();
@@ -184,7 +204,9 @@ export default function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to unfollow user");
+        const errorData = await response.json();
+        console.error("Unfollow error response:", errorData);
+        throw new Error(errorData.message || "Failed to unfollow user");
       }
 
       const data = await response.json();
@@ -201,7 +223,7 @@ export default function ProfilePage() {
         ...prev,
         following: Math.max(0, prev.following - 1),
         followingList: (prev.followingList || []).filter(
-          id => id !== (viewedUser._id || viewedUser.id)
+          id => String(id) !== String(viewedUser._id || viewedUser.id)
         )
       }));
     } catch (error) {
