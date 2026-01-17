@@ -133,7 +133,7 @@ export default function Login() {
               />
               <span>Remember me</span>
             </label>
-            <Link to="/forgot-password" class="forgot-link">
+            <Link to="/forgot-password" className="forgot-link">
               Forgot password?
             </Link>
           </div>
