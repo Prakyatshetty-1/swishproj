@@ -1,7 +1,15 @@
 import { BadgeCheck, Settings, MapPin, Link } from "lucide-react"
 import "../styles/profile-header.css"
 
-export default function ProfileHeader({ userData, onEditClick, isOwnProfile = true }) {
+export default function ProfileHeader({ 
+  userData, 
+  onEditClick, 
+  isOwnProfile = true,
+  isFollowing = false,
+  onFollow = null,
+  onUnfollow = null,
+  isFollowLoading = false
+}) {
   return (
     <div className="profile-header-container">
       <div className="profile-header">
@@ -65,6 +73,28 @@ export default function ProfileHeader({ userData, onEditClick, isOwnProfile = tr
               <button className="settings-btn">
                 <Settings size={20} />
               </button>
+            </div>
+          )}
+
+          {!isOwnProfile && (
+            <div className="profile-actions">
+              {isFollowing ? (
+                <button 
+                  className="unfollow-btn"
+                  onClick={onUnfollow}
+                  disabled={isFollowLoading}
+                >
+                  {isFollowLoading ? 'Unfollowing...' : 'Unfollow'}
+                </button>
+              ) : (
+                <button 
+                  className="follow-btn"
+                  onClick={onFollow}
+                  disabled={isFollowLoading}
+                >
+                  {isFollowLoading ? 'Following...' : 'Follow'}
+                </button>
+              )}
             </div>
           )}
         </div>

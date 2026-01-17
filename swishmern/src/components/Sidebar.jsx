@@ -1,9 +1,12 @@
 import React from 'react';
 import { useState,useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
+import axios from 'axios';
 import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays } from 'lucide-react';
 import Logo from './ui/Logo';
 import '../styles/sidebar.css';
+
+const API_BASE_URL = "http://localhost:5000/api";
 
 export default function Sidebar() {
   const navigate = useNavigate();

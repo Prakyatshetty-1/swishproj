@@ -6,7 +6,7 @@
   overflow: hidden;
 }
 
-/* .left-sidebar-wrapper {
+.left-sidebar-wrapper {
   width: 260px;
   flex-shrink: 0;
   height: 100vh;
@@ -14,7 +14,7 @@
   background-color: white;
   overflow-y: hidden;
   z-index: 20;
-} */
+}
 
 .profile-main {
   flex: 1;

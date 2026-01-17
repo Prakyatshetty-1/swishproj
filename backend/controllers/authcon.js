@@ -347,6 +347,21 @@ export const getAllUsers = async (req, res) => {
       filter._id = { $ne: excludeUserId };
     }
     
+    // Get current user's following list to exclude them
+    let followingList = [];
+    if (excludeUserId) {
+      const currentUser = await User.findById(excludeUserId, { followingList: 1 }).lean();
+      followingList = currentUser?.followingList || [];
+    }
+    
+    // Also exclude users that current user is already following
+    if (followingList.length > 0) {
+      filter._id = { 
+        $ne: excludeUserId,
+        $nin: followingList
+      };
+    }
+    
     const users = await User.find(filter, {
       name: 1,
       email: 1,

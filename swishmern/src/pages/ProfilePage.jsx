@@ -18,6 +18,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   
   useEffect(() => {
     // Get user info from localStorage
@@ -105,12 +107,107 @@ export default function ProfilePage() {
       const data = await response.json();
       setViewedUser(data.user || data);
       setIsOwnProfile(false);
+
+      // Check if current user is following this user
+      if (user && user.followingList) {
+        const isCurrentlyFollowing = user.followingList.includes(id) || 
+                                     user.followingList.some(item => item._id === id);
+        setIsFollowing(isCurrentlyFollowing);
+      }
     } catch (error) {
       console.error("Error fetching user profile:", error);
       // Fallback: redirect back to own profile
       navigate("/profile");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user || !viewedUser) return;
+    
+    try {
+      setIsFollowLoading(true);
+      const response = await fetch(`${API_BASE_URL}/auth/follow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify({
+          currentUserId: user.id || user._id,
+          targetUserId: viewedUser._id || viewedUser.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to follow user");
+      }
+
+      const data = await response.json();
+      setIsFollowing(true);
+      
+      // Update viewed user followers count
+      setViewedUser(prev => ({
+        ...prev,
+        followers: prev.followers + 1
+      }));
+
+      // Update current user following count and list
+      setUser(prev => ({
+        ...prev,
+        following: prev.following + 1,
+        followingList: [...(prev.followingList || []), viewedUser._id || viewedUser.id]
+      }));
+    } catch (error) {
+      console.error("Error following user:", error);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!user || !viewedUser) return;
+    
+    try {
+      setIsFollowLoading(true);
+      const response = await fetch(`${API_BASE_URL}/auth/unfollow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify({
+          currentUserId: user.id || user._id,
+          targetUserId: viewedUser._id || viewedUser.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to unfollow user");
+      }
+
+      const data = await response.json();
+      setIsFollowing(false);
+      
+      // Update viewed user followers count
+      setViewedUser(prev => ({
+        ...prev,
+        followers: Math.max(0, prev.followers - 1)
+      }));
+
+      // Update current user following count and list
+      setUser(prev => ({
+        ...prev,
+        following: Math.max(0, prev.following - 1),
+        followingList: (prev.followingList || []).filter(
+          id => id !== (viewedUser._id || viewedUser.id)
+        )
+      }));
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+    } finally {
+      setIsFollowLoading(false);
     }
   };
 
@@ -188,6 +285,10 @@ export default function ProfilePage() {
           userData={userData} 
           onEditClick={() => setIsEditModalOpen(true)}
           isOwnProfile={isOwnProfile}
+          isFollowing={isFollowing}
+          onFollow={handleFollow}
+          onUnfollow={handleUnfollow}
+          isFollowLoading={isFollowLoading}
         />
         {isOwnProfile ? (
           <>
