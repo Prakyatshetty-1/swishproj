@@ -1,15 +1,17 @@
 import User from '../models/User.js';
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import sharp from 'sharp';
 
 // Load environment variables
 dotenv.config();
 
-// Configure Cloudinary with explicit environment variables
+// Configure Cloudinary with explicit environment variables and timeout settings
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  timeout: 60000, // 60 second timeout
 });
 
 // Log configuration (remove in production)
@@ -42,14 +44,19 @@ export const updateProfile = async (req, res) => {
         // Check if avatarUrl is a data URL (base64) or a URL
         if (avatarUrl.startsWith('data:')) {
           console.log('📸 Uploading image to Cloudinary...');
-          // Upload to Cloudinary
-          const result = await cloudinary.uploader.upload(avatarUrl, {
+          
+          // Compress image before upload
+          const compressedImage = await compressBase64Image(avatarUrl);
+          
+          // Upload to Cloudinary with increased timeout
+          const result = await cloudinary.uploader.upload(compressedImage, {
             folder: 'swish/profiles',
             resource_type: 'auto',
             width: 500,
             height: 500,
             crop: 'fill',
             quality: 'auto',
+            timeout: 60000,
           });
           console.log('✅ Image uploaded successfully:', result.secure_url);
           updateData.avatarUrl = result.secure_url;
@@ -100,5 +107,196 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Error updating profile', error: error.message });
+  }
+};
+
+// Helper function to compress base64 images using sharp
+const compressBase64Image = async (base64String) => {
+  try {
+    // Extract the base64 data (remove data:image/...;base64, prefix)
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Compress with sharp
+    const compressedBuffer = await sharp(buffer)
+      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    
+    // Convert back to base64 data URL
+    return `data:image/jpeg;base64,${compressedBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error('Image compression error:', error);
+    // Return original if compression fails
+    return base64String;
+  }
+};
+
+// GET SINGLE USER BY ID
+export const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const user = await User.findById(userId, {
+      name: 1,
+      email: 1,
+      avatarUrl: 1,
+      role: 1,
+      about: 1,
+      department: 1,
+      year: 1,
+      division: 1,
+      followers: 1,
+      following: 1,
+      posts: 1,
+    }).lean();
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      message: 'User fetched successfully',
+      user: {
+        _id: user._id,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+        about: user.about,
+        department: user.department,
+        year: user.year,
+        division: user.division,
+        followers: user.followers,
+        following: user.following,
+        posts: user.posts,
+      },
+    });
+  } catch (error) {
+    console.error('Get user by ID error:', error);
+    res.status(500).json({ message: 'Error fetching user', error: error.message });
+  }
+};
+
+// FOLLOW USER
+export const followUser = async (req, res) => {
+  try {
+    const { currentUserId, targetUserId } = req.body;
+
+    // Validate inputs
+    if (!currentUserId || !targetUserId) {
+      return res.status(400).json({ message: 'Current user ID and target user ID are required' });
+    }
+
+    // Check if trying to follow self
+    if (currentUserId === targetUserId) {
+      return res.status(400).json({ message: 'You cannot follow yourself' });
+    }
+
+    // Get both users
+    const currentUser = await User.findById(currentUserId);
+    const targetUser = await User.findById(targetUserId);
+
+    if (!currentUser || !targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if already following
+    if (currentUser.followingList.includes(targetUserId)) {
+      return res.status(400).json({ message: 'You are already following this user' });
+    }
+
+    // Add target user to current user's following list
+    currentUser.followingList.push(targetUserId);
+    currentUser.following += 1;
+
+    // Add current user to target user's followers list
+    targetUser.followersList.push(currentUserId);
+    targetUser.followers += 1;
+
+    // Save both users
+    await currentUser.save();
+    await targetUser.save();
+
+    console.log(`✅ ${currentUser.name} followed ${targetUser.name}`);
+
+    res.status(200).json({
+      message: 'Successfully followed user',
+      currentUser: {
+        id: currentUser._id,
+        following: currentUser.following,
+      },
+      targetUser: {
+        id: targetUser._id,
+        followers: targetUser.followers,
+      },
+    });
+  } catch (error) {
+    console.error('Follow user error:', error);
+    res.status(500).json({ message: 'Error following user', error: error.message });
+  }
+};
+
+// UNFOLLOW USER
+export const unfollowUser = async (req, res) => {
+  try {
+    const { currentUserId, targetUserId } = req.body;
+
+    // Validate inputs
+    if (!currentUserId || !targetUserId) {
+      return res.status(400).json({ message: 'Current user ID and target user ID are required' });
+    }
+
+    // Get both users
+    const currentUser = await User.findById(currentUserId);
+    const targetUser = await User.findById(targetUserId);
+
+    if (!currentUser || !targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if not following
+    if (!currentUser.followingList.includes(targetUserId)) {
+      return res.status(400).json({ message: 'You are not following this user' });
+    }
+
+    // Remove target user from current user's following list
+    currentUser.followingList = currentUser.followingList.filter(
+      (id) => id.toString() !== targetUserId.toString()
+    );
+    currentUser.following -= 1;
+
+    // Remove current user from target user's followers list
+    targetUser.followersList = targetUser.followersList.filter(
+      (id) => id.toString() !== currentUserId.toString()
+    );
+    targetUser.followers -= 1;
+
+    // Save both users
+    await currentUser.save();
+    await targetUser.save();
+
+    console.log(`✅ ${currentUser.name} unfollowed ${targetUser.name}`);
+
+    res.status(200).json({
+      message: 'Successfully unfollowed user',
+      currentUser: {
+        id: currentUser._id,
+        following: currentUser.following,
+      },
+      targetUser: {
+        id: targetUser._id,
+        followers: targetUser.followers,
+      },
+    });
+  } catch (error) {
+    console.error('Unfollow user error:', error);
+    res.status(500).json({ message: 'Error unfollowing user', error: error.message });
   }
 };

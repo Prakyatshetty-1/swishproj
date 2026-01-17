@@ -134,6 +134,7 @@ function App() {
         <Route path="/notifications" element={<ProtectedRoute element={<Notifications/>} requireOnboarding={true} />}/>
         <Route path="/settings" element={<ProtectedRoute element={<Settings/>} requireOnboarding={true} />}/>
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
+        <Route path="/profile/:userId" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
 
       </Routes>
     </BrowserRouter>

@@ -1,31 +1,61 @@
+import { useState, useEffect } from "react"
 import UserCard from "./UserCard"
 import SuggestedUser from "./SuggestedUser"
+import AllUsersModal from "./AllUsersModal"
 import "../styles/right-panel.css"
+const API_BASE_URL = "http://localhost:5000/api";
 
 export default function RightPanel() {
-  const suggestedUsers = [
-    {
-      id: 1,
-      name: "alex.t",
-      role: "STUDENT",
-      bio: "CS Junior | Full-stack Dev",
-      image: "/student-alex-studying.png",
-    },
-    {
-      id: 2,
-      name: "maya.creates",
-      role: "STUDENT",
-      bio: "Design Major | UI/UX Enthusiast",
-      image: "/student-maya.jpg",
-    },
-    {
-      id: 3,
-      name: "marcus.j",
-      role: "STUDENT",
-      bio: "Engineering Senior | Robotics",
-      image: "/student-marcus.jpg",
-    },
-  ]
+  const [suggestedUsers, setSuggestedUsers] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [showAllUsers, setShowAllUsers] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState(null)
+
+  useEffect(() => {
+    // Get current user ID from localStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser)
+        const userId = user?.id || user?._id
+        setCurrentUserId(userId)
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchSuggestedUsers()
+    }
+  }, [currentUserId])
+
+  const fetchSuggestedUsers = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${API_BASE_URL}/auth/users?excludeUserId=${currentUserId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch users")
+      }
+
+      const data = await response.json()
+      const users = (data.users || data).slice(0, 3) // Get only first 3 users
+      setSuggestedUsers(users)
+    } catch (error) {
+      console.error("Error fetching suggested users:", error)
+      // Fallback to empty array if API fails
+      setSuggestedUsers([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const trendingTopics = [
     "#CampusLife",
@@ -43,12 +73,33 @@ export default function RightPanel() {
       <div className="suggested-section">
         <div className="section-header">
           <h3>Suggested for you</h3>
-          <a href="#">See All</a>
+          <button
+            className="see-all-btn"
+            onClick={() => setShowAllUsers(true)}
+          >
+            See All
+          </button>
         </div>
-        {suggestedUsers.map((user) => (
-          <SuggestedUser key={user.id} {...user} />
-        ))}
+        {loading ? (
+          <div className="loading-users">Loading users...</div>
+        ) : suggestedUsers.length === 0 ? (
+          <div className="no-users">No users available</div>
+        ) : (
+          suggestedUsers.map((user) => (
+            <SuggestedUser
+              key={user._id || user.id}
+              name={user.name}
+              role={user.role || "STUDENT"}
+              bio={user.about || user.bio || ""}
+              image={user.avatarUrl || user.image || "/placeholder.svg"}
+              userId={user._id || user.id}
+              onFollowChange={() => fetchSuggestedUsers()}
+            />
+          ))
+        )}
       </div>
+
+      <AllUsersModal isOpen={showAllUsers} onClose={() => setShowAllUsers(false)} />
 
       <div className="trending-section">
         <h3>Trending on Campus</h3>

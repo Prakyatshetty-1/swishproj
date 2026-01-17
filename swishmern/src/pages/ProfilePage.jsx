@@ -1,6 +1,6 @@
 import React from "react"
 import { useState,useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
 import ProfileHeader from "../components/ProfileHeader"
 import ProfileTabs from "../components/ProfileTabs"
@@ -8,11 +8,18 @@ import PostsGrid from "../components/PostsGrid"
 import EditProfile from "../components/EditProfile"
 import "../styles/profile.css"
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { userId } = useParams();
   const [user, setUser] = useState(null);
+  const [viewedUser, setViewedUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   
   useEffect(() => {
     // Get user info from localStorage
@@ -25,20 +32,201 @@ export default function ProfilePage() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (userId && user) {
+      // Convert both to strings for comparison
+      const userIdString = String(userId);
+      const currentUserIdString = String(user.id || user._id);
+      
+      // Viewing another user's profile
+      if (userIdString === currentUserIdString) {
+        // If userId matches current user, fetch fresh own profile data
+        setIsOwnProfile(true);
+        setViewedUser(null);
+        fetchCurrentUserProfile(currentUserIdString);
+      } else {
+        // Fetch other user's profile data
+        fetchUserProfile(userId);
+      }
+    } else if (user && !userId) {
+      // Viewing own profile - fetch fresh data
+      setIsOwnProfile(true);
+      setViewedUser(null);
+      const currentUserIdString = String(user.id || user._id);
+      fetchCurrentUserProfile(currentUserIdString);
+    }
+  }, [userId, user]);
+
+  const fetchCurrentUserProfile = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/user/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      const data = await response.json();
+      const freshUser = data.user || data;
+      
+      // Update both state and localStorage with fresh data
+      setUser(freshUser);
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const updatedUser = {
+        ...storedUser,
+        followers: freshUser.followers,
+        following: freshUser.following,
+        posts: freshUser.posts,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error("Error fetching current user profile:", error);
+    }
+  };
+
+  const fetchUserProfile = async (id) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/auth/user/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      const data = await response.json();
+      setViewedUser(data.user || data);
+      setIsOwnProfile(false);
+
+      // Check if current user is following this user
+      if (user && user.followingList) {
+        const isCurrentlyFollowing = user.followingList.includes(id) || 
+                                     user.followingList.some(item => item._id === id);
+        setIsFollowing(isCurrentlyFollowing);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      // Fallback: redirect back to own profile
+      navigate("/profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user || !viewedUser) return;
+    
+    try {
+      setIsFollowLoading(true);
+      const response = await fetch(`${API_BASE_URL}/auth/follow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify({
+          currentUserId: user.id || user._id,
+          targetUserId: viewedUser._id || viewedUser.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to follow user");
+      }
+
+      const data = await response.json();
+      setIsFollowing(true);
+      
+      // Update viewed user followers count
+      setViewedUser(prev => ({
+        ...prev,
+        followers: prev.followers + 1
+      }));
+
+      // Update current user following count and list
+      setUser(prev => ({
+        ...prev,
+        following: prev.following + 1,
+        followingList: [...(prev.followingList || []), viewedUser._id || viewedUser.id]
+      }));
+    } catch (error) {
+      console.error("Error following user:", error);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!user || !viewedUser) return;
+    
+    try {
+      setIsFollowLoading(true);
+      const response = await fetch(`${API_BASE_URL}/auth/unfollow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify({
+          currentUserId: user.id || user._id,
+          targetUserId: viewedUser._id || viewedUser.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to unfollow user");
+      }
+
+      const data = await response.json();
+      setIsFollowing(false);
+      
+      // Update viewed user followers count
+      setViewedUser(prev => ({
+        ...prev,
+        followers: Math.max(0, prev.followers - 1)
+      }));
+
+      // Update current user following count and list
+      setUser(prev => ({
+        ...prev,
+        following: Math.max(0, prev.following - 1),
+        followingList: (prev.followingList || []).filter(
+          id => id !== (viewedUser._id || viewedUser.id)
+        )
+      }));
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
 
+
+
+  const profileData = isOwnProfile ? user : viewedUser;
 
   const userData = {
-    name: user?.name,
-    role: user?.role,
-    about: user?.about || "Hi there!",
-    bio: `${user?.year} | ${user?.department} | Div ${user?.division}`,
+    name: profileData?.name,
+    role: profileData?.role,
+    about: profileData?.about || "Hi there!",
+    bio: `${profileData?.year} | ${profileData?.department} | Div ${profileData?.division}`,
     location: "Campus, University",
     website: "campus.edu",
-    posts: user?.posts || 0,
-    followers: user?.followers || 0,
-    following: user?.following || 0,
-    avatar: user?.avatarUrl || "/placeholder.svg",
+    posts: profileData?.posts || 0,
+    followers: profileData?.followers || 0,
+    following: profileData?.following || 0,
+    avatar: profileData?.avatarUrl || "/placeholder.svg",
   }
 
   const userPosts = [
@@ -48,7 +236,7 @@ export default function ProfilePage() {
       authorRole: "Faculty",
       timeAgo: "3 hours ago",
       authorImage: userData.avatar,
-      postImage: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800",
+      postImage: "/placeholder.svg",
       likes: 234,
       caption:
         "Another successful Physics 101 lecture today! The students' engagement with quantum mechanics concepts was incredible. Science never gets old! 🎓 #CampusLife #Physics",
@@ -60,7 +248,7 @@ export default function ProfilePage() {
       authorRole: "Faculty",
       timeAgo: "1 day ago",
       authorImage: userData.avatar,
-      postImage: "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=800",
+      postImage: "/placeholder.svg",
       likes: 189,
       caption:
         "Great research discussion with the team. New breakthroughs in quantum computing! #ResearchLife #QuantumComputing",
@@ -74,10 +262,12 @@ export default function ProfilePage() {
     setUser(updatedUser)
   }
 
-  if (!user) {
+  if (!user || (isLoading && viewedUser === null)) {
     return (
       <div className="app-container">
-        <Sidebar />
+        <div className="left-sidebar-wrapper">
+          <Sidebar />
+        </div>
         <div className="profile-main">
           <p>Loading...</p>
         </div>
@@ -87,16 +277,35 @@ export default function ProfilePage() {
 
   return (
     <div className="app-container">
-      <Sidebar />
+      <div className="left-sidebar-wrapper">
+        <Sidebar />
+      </div>
       <div className="profile-main">
         <ProfileHeader 
           userData={userData} 
           onEditClick={() => setIsEditModalOpen(true)}
+          isOwnProfile={isOwnProfile}
+          isFollowing={isFollowing}
+          onFollow={handleFollow}
+          onUnfollow={handleUnfollow}
+          isFollowLoading={isFollowLoading}
         />
-        <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {activeTab === "posts" && <PostsGrid posts={userPosts} />}
-        {activeTab === "saved" && <PostsGrid posts={userPosts.slice(0, 1)} />}
+        {isOwnProfile ? (
+          <>
+            <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            {activeTab === "posts" && <PostsGrid posts={userPosts} />}
+            {activeTab === "saved" && <PostsGrid posts={userPosts.slice(0, 1)} />}
+          </>
+        ) : (
+          <>
+            <div className="profile-tabs">
+              <div className="tab active">
+                <span>Posts</span>
+              </div>
+            </div>
+            <PostsGrid posts={userPosts} />
+          </>
+        )}
       </div>
 
       {isEditModalOpen && (
