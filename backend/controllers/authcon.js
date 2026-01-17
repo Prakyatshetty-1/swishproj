@@ -339,7 +339,15 @@ export const saveOnboarding = async (req, res) => {
 // GET ALL USERS
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, {
+    const { excludeUserId } = req.query;
+    
+    // Build filter to exclude specific user if provided
+    const filter = {};
+    if (excludeUserId) {
+      filter._id = { $ne: excludeUserId };
+    }
+    
+    const users = await User.find(filter, {
       name: 1,
       email: 1,
       avatarUrl: 1,
@@ -374,4 +382,3 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// UPDATE PROFILE

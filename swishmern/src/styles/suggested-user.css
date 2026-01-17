@@ -73,3 +73,18 @@
 .follow-btn:hover {
   background-color: #4f46e5;
 }
+
+.follow-btn.following {
+  background-color: #e5e7eb;
+  color: #111827;
+  border: 1px solid #d1d5db;
+}
+
+.follow-btn.following:hover {
+  background-color: #d1d5db;
+}
+
+.follow-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

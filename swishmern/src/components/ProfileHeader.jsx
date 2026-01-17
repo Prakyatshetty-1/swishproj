@@ -1,7 +1,7 @@
 import { BadgeCheck, Settings, MapPin, Link } from "lucide-react"
 import "../styles/profile-header.css"
 
-export default function ProfileHeader({ userData, onEditClick }) {
+export default function ProfileHeader({ userData, onEditClick, isOwnProfile = true }) {
   return (
     <div className="profile-header-container">
       <div className="profile-header">
@@ -59,12 +59,14 @@ export default function ProfileHeader({ userData, onEditClick }) {
             </div>
           </div>
 
-          <div className="profile-actions">
-            <button className="edit-profile-btn" onClick={onEditClick}>Edit Profile</button>
-            <button className="settings-btn">
-              <Settings size={20} />
-            </button>
-          </div>
+          {isOwnProfile && (
+            <div className="profile-actions">
+              <button className="edit-profile-btn" onClick={onEditClick}>Edit Profile</button>
+              <button className="settings-btn">
+                <Settings size={20} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

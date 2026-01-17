@@ -9,15 +9,32 @@ export default function RightPanel() {
   const [suggestedUsers, setSuggestedUsers] = useState([])
   const [loading, setLoading] = useState(false)
   const [showAllUsers, setShowAllUsers] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState(null)
 
   useEffect(() => {
-    fetchSuggestedUsers()
+    // Get current user ID from localStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser)
+        const userId = user?.id || user?._id
+        setCurrentUserId(userId)
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error)
+      }
+    }
   }, [])
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchSuggestedUsers()
+    }
+  }, [currentUserId])
 
   const fetchSuggestedUsers = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${API_BASE_URL}/auth/users`, {
+      const response = await fetch(`${API_BASE_URL}/auth/users?excludeUserId=${currentUserId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -75,6 +92,8 @@ export default function RightPanel() {
               role={user.role || "STUDENT"}
               bio={user.about || user.bio || ""}
               image={user.avatarUrl || user.image || "/placeholder.svg"}
+              userId={user._id || user.id}
+              onFollowChange={() => fetchSuggestedUsers()}
             />
           ))
         )}
