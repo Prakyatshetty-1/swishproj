@@ -1,5 +1,5 @@
 import express from "express";
-import { createPost, getFeedPosts, getUserPosts, getTrendingHashtags, getPostsByHashtag } from "../controllers/postcon.js";
+import { createPost, getFeedPosts, getUserPosts, getTrendingHashtags, getPostsByHashtag, likePost, addComment, getPostComments } from "../controllers/postcon.js";
 import upload from "../middleware/multer.js";
 
 const router = express.Router();
@@ -11,5 +11,8 @@ router.get("/feed", getFeedPosts);
 router.get("/profile/:userId", getUserPosts);
 router.get("/trending/hashtags", getTrendingHashtags);
 router.get("/hashtag/:hashtag", getPostsByHashtag);
+router.post("/like", likePost);
+router.post("/comment", addComment);
+router.get("/:postId/comments", getPostComments);
 
 export default router;

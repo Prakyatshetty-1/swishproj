@@ -66,6 +66,7 @@ export const getFeedPosts = async (req,res)=>{
         // Get posts with pagination
         const posts = await Post.find()
         .populate("userId", "name avatarUrl role")
+        .populate("comments.userId", "name avatarUrl")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
@@ -91,6 +92,7 @@ export const getUserPosts = async(req,res) => {
     try{
         const posts = await Post.find({userId: req.params.userId})
         .populate("userId", "name avatarUrl")
+        .populate("comments.userId", "name avatarUrl")
         .sort({ createdAt: -1 }); 
 
         res.status(200).json(posts);
@@ -142,6 +144,7 @@ export const getPostsByHashtag = async(req,res) => {
         // Get posts with this hashtag with pagination
         const posts = await Post.find({ hashtags: hashtag })
         .populate("userId", "name avatarUrl role")
+        .populate("comments.userId", "name avatarUrl")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
@@ -157,6 +160,97 @@ export const getPostsByHashtag = async(req,res) => {
     }
     catch(err){
         console.error("Error in getting posts by hashtag: ", err);
+        res.status(500).json(err);
+    }
+};
+
+// Like a post
+// Like a post - FIXED VERSION
+export const likePost = async(req, res) => {
+    try {
+        const { postId, userId } = req.body;
+        
+        if (!postId || !userId) {
+            return res.status(400).json({ message: "PostId and UserId are required" });
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Convert userId to string for comparison
+        const userIdString = userId.toString();
+        
+        // Check if user already liked the post (compare as strings)
+        const likeIndex = post.likes.findIndex(id => id.toString() === userIdString);
+        
+        if (likeIndex !== -1) {
+            // User already liked, so remove the like
+            post.likes.splice(likeIndex, 1);
+        } else {
+            // User hasn't liked, so add the like
+            post.likes.push(userId);
+        }
+        
+        await post.save();
+        
+        // Populate the post data before sending response
+        const populatedPost = await Post.findById(postId)
+            .populate("userId", "name avatarUrl role")
+            .populate("comments.userId", "name avatarUrl");
+        
+        res.status(200).json({ 
+            message: "Like toggled successfully", 
+            likes: post.likes,
+            post: populatedPost 
+        });
+    } catch(err) {
+        console.error("Error liking post: ", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+};
+
+// Add comment to post
+export const addComment = async(req, res) => {
+    try {
+        const { postId, userId, text } = req.body;
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        const newComment = {
+            userId,
+            text,
+            createdAt: new Date()
+        };
+
+        post.comments.push(newComment);
+        const savedPost = await post.save();
+        const populatedPost = await Post.findById(postId).populate("comments.userId", "name avatarUrl");
+        
+        res.status(200).json({ message: "Comment added", post: populatedPost });
+    } catch(err) {
+        console.error("Error adding comment: ", err);
+        res.status(500).json(err);
+    }
+};
+
+// Get all comments for a post
+export const getPostComments = async(req, res) => {
+    try {
+        const { postId } = req.params;
+        
+        const post = await Post.findById(postId).populate("comments.userId", "name avatarUrl");
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        res.status(200).json({ comments: post.comments });
+    } catch(err) {
+        console.error("Error getting comments: ", err);
         res.status(500).json(err);
     }
 };
