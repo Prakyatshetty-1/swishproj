@@ -22,4 +22,4 @@ dist-ssr
 .DS_Store
 
 # Uploads (CRITICAL)
-backend/uploads/
+# backend/uploads/

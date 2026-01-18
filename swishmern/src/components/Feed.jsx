@@ -18,21 +18,19 @@ export default function Feed() {
   ];
 
   //fetch posts from backend
-  useEffect(()=>{
-    const fetchPosts = async ()=>{
-      try{
-        const res = await axios.get(`${API_BASE_URL}/posts/feed`);
-        setPosts(res.data);
-      }
-      catch(err){
-        console.error("Error fetching feed:", err);
-      }
-      finally{
-        setLoading(false);
-      }
-    };
-    fetchPosts();
-  },[]);
+  useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/posts/feed`);
+      setPosts(res.data.posts); // Access the posts array from the response
+    } catch (err) {
+      console.error("Error fetching feed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchPosts();
+}, []);
 
 return (
     <div className="feed">
