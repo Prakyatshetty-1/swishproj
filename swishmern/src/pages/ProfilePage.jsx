@@ -1,55 +1,61 @@
-import React from "react"
-import { useState,useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import Sidebar from "../components/Sidebar"
-import ProfileHeader from "../components/ProfileHeader"
-import ProfileTabs from "../components/ProfileTabs"
-import PostsGrid from "../components/PostsGrid"
-import EditProfile from "../components/EditProfile"
-import "../styles/profile.css"
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios"; // Added axios
+import { formatDistanceToNow } from "date-fns"; // Added for time formatting
+import Sidebar from "../components/Sidebar";
+import ProfileHeader from "../components/ProfileHeader";
+import ProfileTabs from "../components/ProfileTabs";
+import PostsGrid from "../components/PostsGrid";
+import EditProfile from "../components/EditProfile";
+import "../styles/profile.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { userId } = useParams();
+  
+  // User Data States
   const [user, setUser] = useState(null);
   const [viewedUser, setViewedUser] = useState(null);
+  
+  // Posts State (Replaces Mock Data)
+  const [posts, setPosts] = useState([]); 
+  
+  // UI States
   const [isLoading, setIsLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
+  const [activeTab, setActiveTab] = useState("posts");
+  
+  // Follow States
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   
+  // 1. Check Authentication on Mount
   useEffect(() => {
-    // Get user info from localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     } else {
-      // Redirect to login if not authenticated
       navigate("/login");
     }
   }, [navigate]);
 
+  // 2. Determine Whose Profile to Show
   useEffect(() => {
     if (userId && user) {
-      // Convert both to strings for comparison
       const userIdString = String(userId);
       const currentUserIdString = String(user.id || user._id);
       
-      // Viewing another user's profile
       if (userIdString === currentUserIdString) {
-        // If userId matches current user, fetch fresh own profile data
         setIsOwnProfile(true);
         setViewedUser(null);
         fetchCurrentUserProfile(currentUserIdString);
       } else {
-        // Fetch other user's profile data
         fetchUserProfile(userId);
       }
     } else if (user && !userId) {
-      // Viewing own profile - fetch fresh data
       setIsOwnProfile(true);
       setViewedUser(null);
       const currentUserIdString = String(user.id || user._id);
@@ -57,6 +63,43 @@ export default function ProfilePage() {
     }
   }, [userId, user]);
 
+  // 3. Determine Active Profile Data
+  const profileData = isOwnProfile ? user : viewedUser;
+
+  // 4. Fetch Posts for the Active Profile (NEW LOGIC)
+  useEffect(() => {
+    if (profileData) {
+      const targetId = profileData._id || profileData.id;
+      if (targetId) fetchUserPosts(targetId);
+    }
+  }, [profileData]);
+
+  const fetchUserPosts = async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/posts/profile/${id}`);
+      
+      // Map MongoDB data to the format PostsGrid expects
+      const formattedPosts = response.data.map(post => ({
+        id: post._id,
+        author: post.userId?.name || "Unknown User",
+        authorRole: post.userId?.role || "Student",
+        authorImage: post.userId?.avatarUrl || "/placeholder.svg",
+        postImage: post.img, // Map 'img' from DB to 'postImage' for component
+        likes: post.likes ? post.likes.length : 0,
+        caption: post.caption,
+        commentCount: post.comments ? post.comments.length : 0,
+        timeAgo: post.createdAt 
+          ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) 
+          : "Just now"
+      }));
+
+      setPosts(formattedPosts);
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+    }
+  };
+
+  // --- Profile Data Fetching Logic (Existing) ---
   const fetchCurrentUserProfile = async (id) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/user/${id}`, {
@@ -67,22 +110,15 @@ export default function ProfilePage() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch user profile");
-      }
+      if (!response.ok) throw new Error("Failed to fetch user profile");
 
       const data = await response.json();
       const freshUser = data.user || data;
       
-      // Update both state and localStorage with fresh data
       setUser(freshUser);
+      // Update local storage
       const storedUser = JSON.parse(localStorage.getItem("user"));
-      const updatedUser = {
-        ...storedUser,
-        followers: freshUser.followers,
-        following: freshUser.following,
-        posts: freshUser.posts,
-      };
+      const updatedUser = { ...storedUser, ...freshUser }; // Merge cleanly
       localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
       console.error("Error fetching current user profile:", error);
@@ -100,15 +136,12 @@ export default function ProfilePage() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch user profile");
-      }
+      if (!response.ok) throw new Error("Failed to fetch user profile");
 
       const data = await response.json();
       setViewedUser(data.user || data);
       setIsOwnProfile(false);
 
-      // Check if current user is following this user
       if (user && user.followingList) {
         const isCurrentlyFollowing = user.followingList.includes(id) || 
                                      user.followingList.some(item => item._id === id);
@@ -116,16 +149,15 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      // Fallback: redirect back to own profile
       navigate("/profile");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- Follow / Unfollow Logic (Existing) ---
   const handleFollow = async () => {
     if (!user || !viewedUser) return;
-    
     try {
       setIsFollowLoading(true);
       const response = await fetch(`${API_BASE_URL}/auth/follow`, {
@@ -140,20 +172,10 @@ export default function ProfilePage() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to follow user");
-      }
+      if (!response.ok) throw new Error("Failed to follow user");
 
-      const data = await response.json();
       setIsFollowing(true);
-      
-      // Update viewed user followers count
-      setViewedUser(prev => ({
-        ...prev,
-        followers: prev.followers + 1
-      }));
-
-      // Update current user following count and list
+      setViewedUser(prev => ({ ...prev, followers: prev.followers + 1 }));
       setUser(prev => ({
         ...prev,
         following: prev.following + 1,
@@ -168,7 +190,6 @@ export default function ProfilePage() {
 
   const handleUnfollow = async () => {
     if (!user || !viewedUser) return;
-    
     try {
       setIsFollowLoading(true);
       const response = await fetch(`${API_BASE_URL}/auth/unfollow`, {
@@ -183,26 +204,14 @@ export default function ProfilePage() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to unfollow user");
-      }
+      if (!response.ok) throw new Error("Failed to unfollow user");
 
-      const data = await response.json();
       setIsFollowing(false);
-      
-      // Update viewed user followers count
-      setViewedUser(prev => ({
-        ...prev,
-        followers: Math.max(0, prev.followers - 1)
-      }));
-
-      // Update current user following count and list
+      setViewedUser(prev => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
       setUser(prev => ({
         ...prev,
         following: Math.max(0, prev.following - 1),
-        followingList: (prev.followingList || []).filter(
-          id => id !== (viewedUser._id || viewedUser.id)
-        )
+        followingList: (prev.followingList || []).filter(id => id !== (viewedUser._id || viewedUser.id))
       }));
     } catch (error) {
       console.error("Error unfollowing user:", error);
@@ -211,56 +220,23 @@ export default function ProfilePage() {
     }
   };
 
+  const handleEditSave = (updatedUser) => {
+    setUser(updatedUser);
+  };
 
-
-
-  const profileData = isOwnProfile ? user : viewedUser;
-
+  // --- Prepare Data for Header ---
   const userData = {
     name: profileData?.name,
     role: profileData?.role,
     about: profileData?.about || "Hi there!",
-    bio: `${profileData?.year} | ${profileData?.department} | Div ${profileData?.division}`,
+    bio: `${profileData?.year || ''} | ${profileData?.department || ''} | Div ${profileData?.division || ''}`,
     location: "Campus, University",
     website: "campus.edu",
-    posts: profileData?.posts || 0,
+    posts: posts.length, // Use real posts length
     followers: profileData?.followers || 0,
     following: profileData?.following || 0,
     avatar: profileData?.avatarUrl || "/placeholder.svg",
-  }
-
-  const userPosts = [
-    {
-      id: 1,
-      author: "Prof. James Chen",
-      authorRole: "Faculty",
-      timeAgo: "3 hours ago",
-      authorImage: userData.avatar,
-      postImage: "/placeholder.svg",
-      likes: 234,
-      caption:
-        "Another successful Physics 101 lecture today! The students' engagement with quantum mechanics concepts was incredible. Science never gets old! 🎓 #CampusLife #Physics",
-      commentCount: 3,
-    },
-    {
-      id: 2,
-      author: "Prof. James Chen",
-      authorRole: "Faculty",
-      timeAgo: "1 day ago",
-      authorImage: userData.avatar,
-      postImage: "/placeholder.svg",
-      likes: 189,
-      caption:
-        "Great research discussion with the team. New breakthroughs in quantum computing! #ResearchLife #QuantumComputing",
-      commentCount: 5,
-    },
-  ]
-
-  const [activeTab, setActiveTab] = React.useState("posts")
-
-  const handleEditSave = (updatedUser) => {
-    setUser(updatedUser)
-  }
+  };
 
   if (!user || (isLoading && viewedUser === null)) {
     return (
@@ -269,10 +245,10 @@ export default function ProfilePage() {
           <Sidebar />
         </div>
         <div className="profile-main">
-          <p>Loading...</p>
+          <div className="loading-spinner">Loading...</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -290,11 +266,16 @@ export default function ProfilePage() {
           onUnfollow={handleUnfollow}
           isFollowLoading={isFollowLoading}
         />
+        
         {isOwnProfile ? (
           <>
             <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-            {activeTab === "posts" && <PostsGrid posts={userPosts} />}
-            {activeTab === "saved" && <PostsGrid posts={userPosts.slice(0, 1)} />}
+            {activeTab === "posts" && <PostsGrid posts={posts} />}
+            {activeTab === "saved" && (
+                <div style={{padding: '20px', textAlign: 'center', color: '#666'}}>
+                    No saved posts yet.
+                </div>
+            )}
           </>
         ) : (
           <>
@@ -303,7 +284,7 @@ export default function ProfilePage() {
                 <span>Posts</span>
               </div>
             </div>
-            <PostsGrid posts={userPosts} />
+            <PostsGrid posts={posts} />
           </>
         )}
       </div>
@@ -316,5 +297,5 @@ export default function ProfilePage() {
         />
       )}
     </div>
-  )
+  );
 }
