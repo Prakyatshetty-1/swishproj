@@ -85,13 +85,11 @@ function App() {
     }
     
     if (!isAuthenticated) {
-      console.log('Not authenticated, redirecting to login');
       return <Navigate to="/login" replace />;
     }
     
     // If route requires onboarding to be complete, check it
     if (requireOnboarding && !hasCompletedOnboarding) {
-      console.log('Onboarding not complete, redirecting to onboarding');
       return <Navigate to="/onboarding" replace />;
     }
     

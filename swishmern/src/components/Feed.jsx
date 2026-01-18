@@ -29,7 +29,6 @@ export default function Feed() {
         const userStr = localStorage.getItem('user');
         if (userStr) {
           const user = JSON.parse(userStr);
-          console.log('Current user from localStorage:', user); // Debug log
           setCurrentUser(user);
         }
       } catch (err) {

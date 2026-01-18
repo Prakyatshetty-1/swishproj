@@ -48,10 +48,6 @@ export default function Post({
   }, [postData, currentUserId]);
 
   const handleLike = async () => {
-  // Debug logs
-  console.log('Current User ID:', currentUserId);
-  console.log('Post ID:', id);
-  
   if (!currentUserId) {
     alert("Please log in to like posts");
     return;
@@ -63,8 +59,6 @@ export default function Post({
       postId: id,
       userId: currentUserId
     });
-    
-    console.log('Like response:', response.data); // Debug log
     
     // Toggle the like state
     setIsLiked(!isLiked);

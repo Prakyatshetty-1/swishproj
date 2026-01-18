@@ -121,7 +121,6 @@ export default function Explore() {
       setCurrentPage(page);
       setHasMore(data.hasMore || false);
       setTotalPosts(data.totalPosts || 0);
-      console.log(`✅ Loaded ${data.posts?.length || 0} posts for page ${page}`);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
