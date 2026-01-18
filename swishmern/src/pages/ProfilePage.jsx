@@ -118,7 +118,14 @@ export default function ProfilePage() {
       setUser(freshUser);
       // Update local storage
       const storedUser = JSON.parse(localStorage.getItem("user"));
-      const updatedUser = { ...storedUser, ...freshUser }; // Merge cleanly
+      const updatedUser = {
+        ...storedUser,
+        followers: freshUser.followers,
+        following: freshUser.following,
+        posts: freshUser.posts,
+        followingList: freshUser.followingList,
+        followersList: freshUser.followersList,
+      };
       localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
       console.error("Error fetching current user profile:", error);
@@ -139,12 +146,13 @@ export default function ProfilePage() {
       if (!response.ok) throw new Error("Failed to fetch user profile");
 
       const data = await response.json();
-      setViewedUser(data.user || data);
+      const fetchedUser = data.user || data;
+      setViewedUser(fetchedUser);
       setIsOwnProfile(false);
-
       if (user && user.followingList) {
-        const isCurrentlyFollowing = user.followingList.includes(id) || 
-                                     user.followingList.some(item => item._id === id);
+        const isCurrentlyFollowing = user.followingList.some(
+          (followId) => String(followId) === String(id)
+        );
         setIsFollowing(isCurrentlyFollowing);
       }
     } catch (error) {
@@ -158,6 +166,14 @@ export default function ProfilePage() {
   // --- Follow / Unfollow Logic (Existing) ---
   const handleFollow = async () => {
     if (!user || !viewedUser) return;
+    
+    console.log("🔗 FOLLOW REQUEST:", {
+      currentUserId: user.id || user._id,
+      targetUserId: viewedUser._id || viewedUser.id,
+      currentUser: user,
+      viewedUser: viewedUser
+    });
+    
     try {
       setIsFollowLoading(true);
       const response = await fetch(`${API_BASE_URL}/auth/follow`, {
@@ -172,7 +188,18 @@ export default function ProfilePage() {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to follow user");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Follow error response:", errorData);
+        // If already following, just update state to show unfollow
+        if (errorData.message === 'You are already following this user') {
+          console.log("✅ Already following, updating UI to show Unfollow");
+          setIsFollowing(true);
+          setIsFollowLoading(false);
+          return;
+        }
+        throw new Error(errorData.message || "Failed to follow user");
+      }
 
       setIsFollowing(true);
       setViewedUser(prev => ({ ...prev, followers: prev.followers + 1 }));
@@ -204,14 +231,20 @@ export default function ProfilePage() {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to unfollow user");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Unfollow error response:", errorData);
+        throw new Error(errorData.message || "Failed to unfollow user");
+      }
 
       setIsFollowing(false);
       setViewedUser(prev => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
       setUser(prev => ({
         ...prev,
         following: Math.max(0, prev.following - 1),
-        followingList: (prev.followingList || []).filter(id => id !== (viewedUser._id || viewedUser.id))
+        followingList: (prev.followingList || []).filter(
+          id => String(id) !== String(viewedUser._id || viewedUser.id)
+        )
       }));
     } catch (error) {
       console.error("Error unfollowing user:", error);
