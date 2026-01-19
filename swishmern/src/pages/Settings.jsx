@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { User, Bell, Moon, Shield, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import { useDarkMode } from '../context/DarkModeContext';
 import "../styles/Settings.css";
 
 export default function Settings() {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   return (
     <div className="settings-container">
@@ -60,7 +61,7 @@ export default function Settings() {
             <input 
               type="checkbox" 
               checked={darkMode}
-              onChange={() => setDarkMode(!darkMode)}
+              onChange={toggleDarkMode}
             />
             <span className="slider round"></span>
           </label>

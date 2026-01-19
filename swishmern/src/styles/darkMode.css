@@ -1,0 +1,207 @@
+/* Dark Mode Variables */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-color: #e5e7eb;
+  --border-color-light: #f3f4f6;
+  --accent-color: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --card-bg: #ffffff;
+  --input-bg: #f9fafb;
+  --sidebar-bg: #ffffff;
+}
+
+.dark-mode {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2a2a2a;
+  --text-primary: #ffffff;
+  --text-secondary: #b8b8b8;
+  --text-tertiary: #8a8a8a;
+  --border-color: #2a2a2a;
+  --border-color-light: #333333;
+  --accent-color: #8b5cf6;
+  --accent-hover: #9d6cfa;
+  --card-bg: #1a1a1a;
+  --input-bg: #2a2a2a;
+  --sidebar-bg: #1a1a1a;
+}
+
+/* Global Styles */
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Sidebar */
+.app-sidebar {
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+}
+
+.nav-item {
+  color: var(--text-secondary);
+}
+
+.nav-item.active,
+.nav-item:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Cards */
+.settings-card,
+.event-card,
+.explore-card,
+.notification-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+/* Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  background-color: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--accent-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Text */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+p, span, label {
+  color: var(--text-secondary);
+}
+
+/* Home Page */
+.home-container {
+  background-color: var(--bg-secondary);
+}
+
+.feed-content {
+  background-color: var(--card-bg);
+}
+
+/* Profile */
+.profile-header,
+.profile-tabs-container,
+.profile-posts-section {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Settings */
+.settings-container {
+  background-color: var(--bg-secondary);
+}
+
+.settings-page-title {
+  color: var(--text-primary);
+}
+
+.card-header {
+  color: var(--text-primary);
+}
+
+.setting-label {
+  color: var(--text-secondary);
+}
+
+/* Notifications */
+.notifications-container {
+  background-color: var(--bg-secondary);
+}
+
+.notification-item {
+  border-color: var(--border-color-light);
+}
+
+.notification-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Events */
+.events-container {
+  background-color: var(--bg-secondary);
+}
+
+.event-card {
+  border-color: var(--border-color);
+}
+
+.event-card:hover {
+  border-color: var(--accent-color);
+}
+
+/* Explore */
+.explore-container {
+  background-color: var(--bg-secondary);
+}
+
+.explore-search-bar {
+  background-color: var(--input-bg);
+  border-color: var(--border-color);
+}
+
+/* Right Panel */
+.right-panel {
+  background-color: var(--sidebar-bg);
+  border-left: 1px solid var(--border-color);
+}
+
+.suggested-user-card {
+  background-color: var(--card-bg);
+}
+
+.suggested-user-card:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Posts */
+.post-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.post-header h4,
+.post-caption {
+  color: var(--text-primary);
+}
+
+.post-timestamp {
+  color: var(--text-tertiary);
+}
+
+/* Create Post */
+.create-post-container {
+  background-color: var(--bg-secondary);
+}
+
+.create-post-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}

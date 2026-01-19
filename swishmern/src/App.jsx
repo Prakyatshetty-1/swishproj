@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import { DarkModeProvider } from './context/DarkModeContext'
 
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
@@ -11,12 +12,14 @@ import HomePage from './pages/HomePage'
 import Home from './pages/Home'
 import Explore from './pages/Explore'
 import Events from './pages/Events'
+import Messages from './pages/Messages'
 import CreatePost from './pages/CreatePost'
 import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
 import ProfilePage from './pages/ProfilePage'
 import SetPassword from './components/SetPassword'
 import './App.css'
+import './styles/darkMode.css'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -118,26 +121,29 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <DarkModeProvider>
+      <BrowserRouter>
+        <Routes>
 
-        <Route path="/" element={<RootRoute />}/>
-        <Route path="/login" element={<AuthRoute element={<Login/>}/>}/>
-        <Route path="/signup" element={<AuthRoute element={<Signup/>}/>}/>
-        <Route path="/forgot-password" element={<AuthRoute element={<ForgotPassword/>}/>}/>
-        <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding/>} requireOnboarding={false} />}/>
-        <Route path="/set-password" element={<ProtectedRoute element={<SetPassword/>} requireOnboarding={false} />}/>
-        <Route path="/home" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
-        <Route path="/explore" element={<ProtectedRoute element={<Explore/>} requireOnboarding={true} />}/>
-        <Route path="/events" element={<ProtectedRoute element={<Events/>} requireOnboarding={true} />}/>
-        <Route path="/create-post" element={<ProtectedRoute element={<CreatePost/>} requireOnboarding={true} />}/>
-        <Route path="/notifications" element={<ProtectedRoute element={<Notifications/>} requireOnboarding={true} />}/>
-        <Route path="/settings" element={<ProtectedRoute element={<Settings/>} requireOnboarding={true} />}/>
-        <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
-        <Route path="/profile/:userId" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
+          <Route path="/" element={<RootRoute />}/>
+          <Route path="/login" element={<AuthRoute element={<Login/>}/>}/>
+          <Route path="/signup" element={<AuthRoute element={<Signup/>}/>}/>
+          <Route path="/forgot-password" element={<AuthRoute element={<ForgotPassword/>}/>}/>
+          <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding/>} requireOnboarding={false} />}/>
+          <Route path="/set-password" element={<ProtectedRoute element={<SetPassword/>} requireOnboarding={false} />}/>
+          <Route path="/home" element={<ProtectedRoute element={<Home/>} requireOnboarding={true} />}/>
+          <Route path="/explore" element={<ProtectedRoute element={<Explore/>} requireOnboarding={true} />}/>
+          <Route path="/events" element={<ProtectedRoute element={<Events/>} requireOnboarding={true} />}/>
+          <Route path="/messages" element={<ProtectedRoute element={<Messages/>} requireOnboarding={true} />}/>
+          <Route path="/create-post" element={<ProtectedRoute element={<CreatePost/>} requireOnboarding={true} />}/>
+          <Route path="/notifications" element={<ProtectedRoute element={<Notifications/>} requireOnboarding={true} />}/>
+          <Route path="/settings" element={<ProtectedRoute element={<Settings/>} requireOnboarding={true} />}/>
+          <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
+          <Route path="/profile/:userId" element={<ProtectedRoute element={<ProfilePage/>} requireOnboarding={true} />}/>
 
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </DarkModeProvider>
   )
 }
 

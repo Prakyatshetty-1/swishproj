@@ -12,7 +12,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/swish'
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: ['http://localhost:5173', 'http://localhost:5174'], // Vite ports
   credentials: true,
 }));
 app.use(express.json({ limit: '50mb' }));
