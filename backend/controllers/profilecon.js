@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import sharp from 'sharp';
+import { createFollowNotification } from './notificationcon.js';
 
 // Load environment variables
 dotenv.config();
@@ -154,6 +155,8 @@ export const getUserById = async (req, res) => {
       followers: 1,
       following: 1,
       posts: 1,
+      followingList: 1,
+      followersList: 1,
     }).lean();
 
     if (!user) {
@@ -176,6 +179,8 @@ export const getUserById = async (req, res) => {
         followers: user.followers,
         following: user.following,
         posts: user.posts,
+        followingList: user.followingList,
+        followersList: user.followersList,
       },
     });
   } catch (error) {
@@ -188,41 +193,68 @@ export const getUserById = async (req, res) => {
 export const followUser = async (req, res) => {
   try {
     const { currentUserId, targetUserId } = req.body;
+    
+    console.log(`\n📌 FOLLOW REQUEST:`, { currentUserId, targetUserId });
 
     // Validate inputs
     if (!currentUserId || !targetUserId) {
+      console.error(`❌ Missing IDs`);
       return res.status(400).json({ message: 'Current user ID and target user ID are required' });
     }
 
     // Check if trying to follow self
-    if (currentUserId === targetUserId) {
+    if (String(currentUserId) === String(targetUserId)) {
+      console.error(`❌ Cannot follow self`);
       return res.status(400).json({ message: 'You cannot follow yourself' });
     }
 
     // Get both users
     const currentUser = await User.findById(currentUserId);
     const targetUser = await User.findById(targetUserId);
+    
+    console.log(`👤 Current User:`, currentUser ? currentUser.name : 'NOT FOUND');
+    console.log(`👤 Target User:`, targetUser ? targetUser.name : 'NOT FOUND');
 
     if (!currentUser || !targetUser) {
+      console.error(`❌ User not found - Current: ${currentUser ? '✓' : '✗'}, Target: ${targetUser ? '✓' : '✗'}`);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if already following
-    if (currentUser.followingList.includes(targetUserId)) {
+    // Check if already following using string comparison
+    console.log(`📋 Current followingList:`, currentUser.followingList.map(id => id.toString()));
+    console.log(`🎯 Target User ID (type: ${typeof targetUserId}):`, targetUserId);
+    
+    const targetUserIdString = String(targetUserId);
+    const isAlreadyFollowing = currentUser.followingList.some(
+      (id) => String(id) === targetUserIdString
+    );
+    
+    console.log(`🔍 Already following?`, isAlreadyFollowing);
+    
+    if (isAlreadyFollowing) {
+      console.warn(`⚠️ ${currentUser.name} already follows ${targetUser.name}`);
       return res.status(400).json({ message: 'You are already following this user' });
     }
 
-    // Add target user to current user's following list
+    console.log(`📝 Attempting to follow: ${currentUser.name} -> ${targetUser.name}`);
+
+    // Add target user to current user's following list (as ObjectId)
     currentUser.followingList.push(targetUserId);
     currentUser.following += 1;
 
-    // Add current user to target user's followers list
+    // Add current user to target user's followers list (as ObjectId)
     targetUser.followersList.push(currentUserId);
     targetUser.followers += 1;
 
     // Save both users
+    console.log(`💾 Saving users...`);
     await currentUser.save();
+    console.log(`✅ Current user saved`);
     await targetUser.save();
+    console.log(`✅ Target user saved`);
+
+    // Create follow notification
+    await createFollowNotification(targetUserId, currentUserId);
 
     console.log(`✅ ${currentUser.name} followed ${targetUser.name}`);
 

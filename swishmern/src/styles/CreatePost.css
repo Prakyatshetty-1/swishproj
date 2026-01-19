@@ -198,6 +198,21 @@
   border-top: 1px solid #f1f5f9;
 }
 
+.meta-input {
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #0f172a;
+  width: 100%;
+  background: transparent;
+  margin-left: 8px;
+}
+
+.meta-input::placeholder {
+  color: #94a3b8;
+}
+
+
 .meta-row {
   display: flex;
   align-items: center;

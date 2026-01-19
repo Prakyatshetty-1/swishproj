@@ -1,47 +1,103 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Image, X, MapPin, Users, Hash, ArrowLeft } from "lucide-react";
+import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import "../styles/CreatePost.css";
+
+const API_BASE_URL = "http://localhost:5000/api";
 
 export default function CreatePost() {
   const navigate = useNavigate();
   const [caption, setCaption] = useState("");
+  const [location, setLocation] = useState("");
+  const [hashtags, setHashtags] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [user, setUser] = useState(null);
+
+  //get the user id from localstorage on mount
+  useEffect(()=>{
+    const storedUser = localStorage.getItem("user");
+    if(storedUser){
+      setUser(JSON.parse(storedUser));
+    } else {
+      navigate("/login");
+    }
+  },[navigate]);
 
   function handleDragOver(e) { e.preventDefault(); setIsDragging(true); }
   function handleDragLeave(e) { e.preventDefault(); setIsDragging(false); }
+
   function handleDrop(e) {
-    e.preventDefault(); setIsDragging(false);
+    e.preventDefault(); 
+    setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onload = (event) => setSelectedImage(event.target.result);
       reader.readAsDataURL(file);
     }
   }
+
   function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onload = (event) => setSelectedImage(event.target.result);
       reader.readAsDataURL(file);
     }
   }
 
-  function handlePost() {
-    if (!selectedImage) return;
+  //helper function to handle file processing
+  function processFile(file){
+    if(file && file.type.startsWith("image/")){
+      setImageFile(file);
+
+      const reader = new FileReader();
+      reader.onload = (event) => setSelectedImage(event.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function handlePost() {
+    if (!imageFile || !user) return alert("Please select an image");
+
     setIsPosting(true);
-    setTimeout(() => {
+
+    const tagsArray = hashtags.split(',')
+    .map(tag => tag.trim())
+    .filter(tag => tag!== "")
+    .map(tag => tag.startsWith('#') ? tag : `#${tag}`);
+
+    const formData = new FormData();
+    formData.append("userId", user.id || user._id);
+    formData.append("caption",caption);
+    formData.append("image", imageFile);
+    formData.append("location", location);
+    formData.append("hashtags",JSON.stringify(tagsArray));
+
+    try{
+      await axios.post(`${API_BASE_URL}/posts`, formData, {
+        headers: {"Content-Type": "multipart/form-data"},
+      });
       setIsPosting(false);
-      navigate("/explore");
-    }, 1500);
+      alert("Post created successfully.");
+      navigate("/home");
+    }
+    catch(err){
+      console.error("Post failed: ",err);
+      setIsPosting(false);
+      alert("Failed to create post. Please try again.");
+    }
   }
 
   return (
-    <div>
+  <div>
       <Sidebar />
       <div className="create-post-wrapper">
       <header className="post-header-grid">
@@ -62,7 +118,7 @@ export default function CreatePost() {
             onClick={handlePost}
             disabled={isPosting || !selectedImage}
           >
-            {isPosting ? "..." : "Post"}
+            {isPosting ? "Posting..." : "Post"}
           </button>
         </div>
       </header>
@@ -112,9 +168,15 @@ export default function CreatePost() {
           <div className="meta-row">
             <div className="meta-left">
               <MapPin size={18} />
-              <span>Add location</span>
+              <input 
+              type="text"
+              className="meta-input"
+              style={{border:'none', outline:'none', marginLeft:'10px', width:'100%'}}
+              placeholder="Add location (e.g. College Canteen)"
+              value={location}
+              onChange={(e)=> setLocation(e.target.value)}
+              />
             </div>
-            <span className="meta-val">Campus Library</span>
           </div>
           
           <div className="meta-row">
@@ -127,13 +189,20 @@ export default function CreatePost() {
           <div className="meta-row">
             <div className="meta-left">
               <Hash size={18} />
-              <span>Add topics</span>
+              <input 
+              type="text"
+              className="meta-input"
+              style={{border:'none', outline:'none', marginLeft:'10px', width:'100%'}}
+              placeholder="Add # topics (comma separated)"
+              value={hashtags}
+              onChange={(e)=> setHashtags(e.target.value)}
+              />
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
     </div>
-    </div>
+  </div>
   );
 }                                                                       

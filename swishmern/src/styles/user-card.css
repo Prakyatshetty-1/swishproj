@@ -47,6 +47,11 @@
   white-space: nowrap;
 }
 
-.switch-btn:hover {
+.switch-btn:hover:not(:disabled) {
   background-color: #4f46e5;
+}
+
+.switch-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
