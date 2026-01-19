@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import sharp from 'sharp';
+import { createFollowNotification } from './notificationcon.js';
 
 // Load environment variables
 dotenv.config();
@@ -251,6 +252,9 @@ export const followUser = async (req, res) => {
     console.log(`✅ Current user saved`);
     await targetUser.save();
     console.log(`✅ Target user saved`);
+
+    // Create follow notification
+    await createFollowNotification(targetUserId, currentUserId);
 
     console.log(`✅ ${currentUser.name} followed ${targetUser.name}`);
 

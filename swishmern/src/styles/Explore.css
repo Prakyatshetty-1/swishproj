@@ -72,11 +72,61 @@
   border: none;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tag-pill:hover {
   background-color: #dbeafe;
+}
+
+.tag-pill.active {
+  background-color: #2563EB;
+  color: white;
+  border: 2px solid #1d4ed8;
+}
+
+.tag-count {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tag-pill.active .tag-count {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.tag-close-icon {
+  cursor: pointer;
+}
+
+.no-tags {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+.hashtag-header {
+  margin: 24px 0 16px 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hashtag-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.hashtag-count {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
 }
 
 .explore-grid {
@@ -151,6 +201,37 @@
   font-size: 0.875rem;
   margin-top: 32px;
   margin-bottom: 40px;
+}
+
+.load-more-btn {
+  padding: 12px 32px;
+  background-color: #2563EB;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.no-posts {
+  text-align: center;
+  color: #64748b;
+  padding: 40px 20px;
+  font-size: 1rem;
 }
 
 /* Search Results Styles */

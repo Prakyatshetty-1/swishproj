@@ -89,18 +89,14 @@ export const login = async (req, res) => {
     // Find user and include password field
     const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
     if (!user) {
-      console.log(`❌ Login failed: User not found for email: ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      console.log(`❌ Login failed: Invalid password for user: ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    
-    console.log(`✅ Login successful for user: ${email}`);
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
