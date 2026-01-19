@@ -1,6 +1,7 @@
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, BadgeCheck, MapPin, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import CommentsModal from "./CommentsModal";
 import "../styles/Home.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -25,7 +26,7 @@ export default function Post({
   const [likeCount, setLikeCount] = useState(likes);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
-  const [showAllComments, setShowAllComments] = useState(false);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
   const [isLoadingComment, setIsLoadingComment] = useState(false);
   const [isLoadingLike, setIsLoadingLike] = useState(false);
 
@@ -104,7 +105,7 @@ export default function Post({
     }
   };
 
-  const displayedComments = showAllComments ? comments : comments.slice(0, 6);
+  const displayedComments = comments.length > 0 ? [comments[comments.length - 1]] : [];
 
   return (
     <div className="post">
@@ -175,7 +176,7 @@ export default function Post({
         
         {location && <div className="post-time-bottom">{timeAgo}</div>}
 
-        {/* Comments Section */}
+        {/* Comments Section - Show only latest comment */}
         {comments && comments.length > 0 && (
           <div className="comments-section" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
             {displayedComments.map((comment, index) => (
@@ -196,9 +197,9 @@ export default function Post({
               </div>
             ))}
             
-            {comments.length > 6 && !showAllComments && (
+            {comments.length > 1 && (
               <button 
-                onClick={() => setShowAllComments(true)}
+                onClick={() => setIsCommentsModalOpen(true)}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -206,27 +207,12 @@ export default function Post({
                   cursor: 'pointer',
                   fontSize: '0.875rem',
                   marginTop: '8px',
-                  padding: 0
+                  padding: 0,
+                  textDecoration: 'none',
+                  fontWeight: '500'
                 }}
               >
                 View all {comments.length} comments
-              </button>
-            )}
-            
-            {showAllComments && comments.length > 6 && (
-              <button 
-                onClick={() => setShowAllComments(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  marginTop: '8px',
-                  padding: 0
-                }}
-              >
-                Hide comments
               </button>
             )}
           </div>
@@ -268,6 +254,14 @@ export default function Post({
           </button>
         </form>
       </div>
+
+      {/* Comments Modal */}
+      <CommentsModal 
+        isOpen={isCommentsModalOpen}
+        onClose={() => setIsCommentsModalOpen(false)}
+        comments={comments}
+        postAuthor={author}
+      />
     </div>
   )
 }
