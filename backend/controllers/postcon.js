@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Post from "../models/Post.js";
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import { createLikeNotification, createCommentNotification } from './notificationcon.js';
 
 dotenv.config();
 
@@ -191,6 +192,8 @@ export const likePost = async(req, res) => {
         } else {
             // User hasn't liked, so add the like
             post.likes.push(userId);
+            // Create like notification
+            await createLikeNotification(postId, userId);
         }
         
         await post.save();
@@ -229,6 +232,10 @@ export const addComment = async(req, res) => {
 
         post.comments.push(newComment);
         const savedPost = await post.save();
+        
+        // Create comment notification
+        await createCommentNotification(postId, userId);
+        
         const populatedPost = await Post.findById(postId).populate("comments.userId", "name avatarUrl");
         
         res.status(200).json({ message: "Comment added", post: populatedPost });

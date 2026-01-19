@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import postRoutes from "./routes/posts.js";
+import notificationRoutes from './routes/notifications.js';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ mongoose.connect(MONGODB_URI, {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
