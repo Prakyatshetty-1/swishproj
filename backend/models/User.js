@@ -83,6 +83,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Hi there!',
     },
+    notificationPreferences: {
+      likes: {
+        type: Boolean,
+        default: true,
+      },
+      comments: {
+        type: Boolean,
+        default: true,
+      },
+      follows: {
+        type: Boolean,
+        default: true,
+      },
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
