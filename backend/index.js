@@ -2,9 +2,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
 import postRoutes from "./routes/posts.js";
 import notificationRoutes from './routes/notifications.js';
+import messageRoutes from './routes/messages.js';
 
 dotenv.config();
 
@@ -19,6 +22,14 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true,
+  },
+});
 
 // MongoDB Connection
 mongoose.connect(MONGODB_URI, {
@@ -39,6 +50,7 @@ mongoose.connect(MONGODB_URI, {
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -53,7 +65,54 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Socket.IO Real-time messaging
+const onlineUsers = new Map();
+
+io.on('connection', (socket) => {
+  socket.on('user:join', ({ userId }) => {
+    if (!userId) return;
+    socket.data.userId = userId;
+    onlineUsers.set(userId, socket.id);
+    io.emit('presence:update', Array.from(onlineUsers.keys()));
+  });
+
+  socket.on('conversation:join', ({ conversationId }) => {
+    if (!conversationId) return;
+    socket.join(conversationId);
+  });
+
+  socket.on('message:send', ({ conversationId, message }) => {
+    if (!conversationId || !message) return;
+    socket.to(conversationId).emit('message:new', message);
+    socket.emit('message:delivered', { messageId: message.id, conversationId });
+  });
+
+  socket.on('message:read', ({ messageId, conversationId }) => {
+    if (!messageId || !conversationId) return;
+    const readAt = Date.now();
+    io.to(conversationId).emit('message:read', { messageId, conversationId, readAt });
+  });
+
+  socket.on('typing:start', ({ conversationId, userId }) => {
+    if (!conversationId || !userId) return;
+    socket.to(conversationId).emit('typing', { conversationId, userId, isTyping: true });
+  });
+
+  socket.on('typing:stop', ({ conversationId, userId }) => {
+    if (!conversationId || !userId) return;
+    socket.to(conversationId).emit('typing', { conversationId, userId, isTyping: false });
+  });
+
+  socket.on('disconnect', () => {
+    const userId = socket.data.userId;
+    if (userId) {
+      onlineUsers.delete(userId);
+      io.emit('presence:update', Array.from(onlineUsers.keys()));
+    }
+  });
+});
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
