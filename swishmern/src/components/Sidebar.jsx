@@ -2,7 +2,7 @@ import React from 'react';
 import { useState,useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays, MessageCircle } from 'lucide-react';
+import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays } from 'lucide-react';
 import Logo from './ui/Logo';
 import '../styles/sidebar.css';
 
@@ -93,7 +93,6 @@ export default function Sidebar() {
         <NavItem icon={Home} path="/home" label="Home" />
         <NavItem icon={Search} path="/explore" label="Explore" />
         <NavItem icon={CalendarDays} path="/events" label="Events" />
-        <NavItem icon={MessageCircle} path="/messages" label="Messages" />
         <NavItem icon={PlusSquare} path="/create-post" label="Create" />
         <NavItem icon={Bell} path="/notifications" label="Notifications" />
         <NavItem icon={User} path="/profile" label="Profile" />
