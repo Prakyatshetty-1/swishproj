@@ -1,4 +1,3 @@
-import User from "../models/User.js";
 import Post from "../models/Post.js";
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
@@ -27,7 +26,11 @@ export const createPost = async(req,res)=>{
         let imageUrl = "";
 
         if(req.file){
-            const result = await cloudinary.uploader.upload(req.file.path, {
+            //base 64 string and dataURI, these two lines are for multer memory storage.
+            const b64 = Buffer.from(req.file.buffer).toString("base64");
+            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+            const result = await cloudinary.uploader.upload(dataURI, {
                 folder: "swish_posts",
             });
             imageUrl = result.secure_url;

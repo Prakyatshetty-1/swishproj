@@ -1,23 +1,7 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-
-//uploads wali folder banau if it not exists.
-const uploadDir = "uploads/";
-if(!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir);
-}
-
-//save karo file ko iss destination par with an unique name.
-const storage = multer.diskStorage({
-    destination: (req,file,cb) =>{
-        cb(null,uploadDir);
-    },
-    filename: (req,file,cb) =>{
-        cb(null,Date.now() + path.extname(file.originalname));
-    }
-});
+//save karo file ko inside servers memory
+const storage = multer.memoryStorage();
 
 //only images upload karega user.
 const fileFilter = (req, file, cb) => {
