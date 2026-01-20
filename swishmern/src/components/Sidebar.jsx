@@ -1,34 +1,30 @@
-import React from 'react';
-import { useState,useEffect } from 'react';
-import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
-import axios from 'axios';
-import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays } from 'lucide-react';
-import Logo from './ui/Logo';
-import '../styles/sidebar.css';
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Home, Compass, Calendar, PlusSquare, Bell, User, LogOut, Settings, Shield } from "lucide-react";
+import axios from "axios";
+import "../styles/Sidebar.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // 1. Load User Data on Mount
   useEffect(() => {
-      // Get user info from localStorage
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        // Redirect to login if not authenticated
-        navigate("/login");
-      }
-  }, [navigate]);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
+  const userId = user?.id || user?._id;
+
+  // 2. Robust Logout Function (From Legacy Code)
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      const userId = user?.id || user?._id;
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (userId && refreshToken) {
@@ -38,87 +34,102 @@ export default function Sidebar() {
           refreshToken: refreshToken,
         });
       }
-
-      // Clear localStorage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("onboardingComplete");
-
-      console.log("✅ Logout successful, localStorage cleared");
-
-      // Dispatch auth state change event BEFORE navigation
-      window.dispatchEvent(new Event('authStateChanged'));
-
-      setIsLoading(false);
-      
-      // Navigate to landing page
-      navigate("/", { replace: true });
-      
     } catch (error) {
-      setIsLoading(false);
       console.error("❌ Logout error:", error);
-      
-      // Still clear localStorage and redirect even if API call fails
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("onboardingComplete");
+    } finally {
+      // Always clean up locally, even if API fails
+      localStorage.clear();
+      console.log("✅ Logout successful, localStorage cleared");
       
       // Dispatch auth state change event
       window.dispatchEvent(new Event('authStateChanged'));
       
-      // Navigate to landing page
+      setIsLoading(false);
       navigate("/", { replace: true });
     }
   };
 
-  const NavItem = ({ icon: Icon, path, label }) => {
-    const isActive = location.pathname === path || (path.startsWith('/profile') && location.pathname.startsWith('/profile'));
-    return (
-      <NavLink to={path} className={`nav-item ${isActive ? 'active' : ''}`}>
-        <Icon size={20} />
-        <span className="nav-label">{label}</span>
-      </NavLink>
-    );
-  };
-
   return (
     <aside className="app-sidebar">
+      {/* --- HEADER --- */}
       <div className="sidebar-header">
-        <Logo />
+        <h1 className="logo-text">Swish</h1>
       </div>
 
+      {/* --- MAIN NAVIGATION --- */}
       <nav className="sidebar-nav-section">
-        <NavItem icon={Home} path="/home" label="Home" />
-        <NavItem icon={Search} path="/explore" label="Explore" />
-        <NavItem icon={CalendarDays} path="/events" label="Events" />
-        <NavItem icon={PlusSquare} path="/create-post" label="Create" />
-        <NavItem icon={Bell} path="/notifications" label="Notifications" />
-        <NavItem icon={User} path="/profile" label="Profile" />
+        <NavLink to="/home" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <Home size={22} />
+          <span className="nav-label">Home</span>
+        </NavLink>
+
+        <NavLink to="/explore" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <Compass size={22} />
+          <span className="nav-label">Explore</span>
+        </NavLink>
+
+        <NavLink to="/events" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <Calendar size={22} />
+          <span className="nav-label">Events</span>
+        </NavLink>
+
+        <NavLink to="/create-post" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <PlusSquare size={22} />
+          <span className="nav-label">Create</span>
+        </NavLink>
+
+        <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <Bell size={22} />
+          <span className="nav-label">Notifications</span>
+        </NavLink>
+
+        <NavLink 
+          to={userId ? `/profile/${userId}` : "/login"} 
+          className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+        >
+          <User size={22} />
+          <span className="nav-label">Profile</span>
+        </NavLink>
       </nav>
 
+      {/* --- FOOTER SECTION (Merged Features) --- */}
       <div className="sidebar-footer-section">
         <nav className="secondary-nav">
-          <NavItem icon={Settings} path="/settings" label="Settings" />
+          {/* Settings Link */}
+          <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+            <Settings size={22} />
+            <span className="nav-label">Settings</span>
+          </NavLink>
           
+          {/* Admin Link (Conditional) */}
           {user?.role === 'admin' && (
-            <NavItem icon={Shield} path="/admin" label="Admin" />
+            <NavLink to="/admin" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+              <Shield size={22} />
+              <span className="nav-label">Admin</span>
+            </NavLink>
           )}
           
-          <button onClick={handleLogout} className="logout-item">
-            <LogOut size={20} />
-            <span className="nav-label">Logout</span>
+          {/* Logout Button */}
+          <button onClick={handleLogout} className="logout-item" disabled={isLoading}>
+            <LogOut size={22} />
+            <span className="nav-label">{isLoading ? "Logging out..." : "Logout"}</span>
           </button>
         </nav>
 
-        <div className="user-mini-profile">
-          <img src={user?.avatarUrl} alt={user?.name} className="user-avatar-sm" />
-          <div className="user-info-text">
-            <p className="u-name">{user?.name}</p>
-            <p className="u-role">{user?.role}</p>
+        {/* User Mini Profile */}
+        {user && (
+          <div className="user-mini-profile">
+            <img 
+              src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}`} 
+              alt={user.name} 
+              className="user-avatar-sm" 
+            />
+            <div className="user-info-text">
+              <div className="u-name">{user.name}</div>
+              <div className="u-role">{user.role || "Student"}</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </aside>
   );
