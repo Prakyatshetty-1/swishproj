@@ -83,6 +83,32 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Hi there!',
     },
+    notificationPreferences: {
+      likes: {
+        type: Boolean,
+        default: true,
+      },
+      comments: {
+        type: Boolean,
+        default: true,
+      },
+      follows: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    bannedReason: {
+      type: String,
+      default: null,
+    },
+    bannedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

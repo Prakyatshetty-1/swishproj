@@ -11,6 +11,13 @@ export const createFollowNotification = async (recipientId, senderId) => {
       return;
     }
 
+    // Check if recipient has follow notifications enabled
+    const recipient = await User.findById(recipientId);
+    if (recipient && recipient.notificationPreferences?.follows === false) {
+      console.log(`✅ Follow notification skipped - recipient has disabled follows`);
+      return;
+    }
+
     // Check if notification already exists
     const existingNotification = await Notification.findOne({
       recipientId,
@@ -44,6 +51,13 @@ export const createLikeNotification = async (postId, senderId) => {
 
     // Don't send notification to self
     if (post.userId.toString() === senderId.toString()) {
+      return;
+    }
+
+    // Check if recipient has like notifications enabled
+    const recipient = await User.findById(post.userId);
+    if (recipient && recipient.notificationPreferences?.likes === false) {
+      console.log(`✅ Like notification skipped - recipient has disabled likes`);
       return;
     }
 
@@ -83,6 +97,13 @@ export const createCommentNotification = async (postId, senderId) => {
 
     // Don't send notification to self
     if (post.userId.toString() === senderId.toString()) {
+      return;
+    }
+
+    // Check if recipient has comment notifications enabled
+    const recipient = await User.findById(post.userId);
+    if (recipient && recipient.notificationPreferences?.comments === false) {
+      console.log(`✅ Comment notification skipped - recipient has disabled comments`);
       return;
     }
 
@@ -285,6 +306,96 @@ export const deleteAllNotifications = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting all notifications',
+      error: error.message,
+    });
+  }
+};
+
+// Get notification preferences
+export const getNotificationPreferences = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate userId
+    if (!userId || userId === 'undefined') {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required and must be valid',
+      });
+    }
+
+    const user = await User.findById(userId, 'notificationPreferences');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      preferences: user.notificationPreferences || {
+        likes: true,
+        comments: true,
+        follows: true,
+      },
+    });
+  } catch (error) {
+    console.error('Error getting notification preferences:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error getting notification preferences',
+      error: error.message,
+    });
+  }
+};
+
+// Update notification preferences
+export const updateNotificationPreferences = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { likes, comments, follows } = req.body;
+
+    // Validate userId
+    if (!userId || userId === 'undefined') {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required and must be valid',
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        notificationPreferences: {
+          likes: likes !== undefined ? likes : true,
+          comments: comments !== undefined ? comments : true,
+          follows: follows !== undefined ? follows : true,
+        },
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    console.log(`✅ Notification preferences updated for user:`, user.email);
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification preferences updated successfully',
+      preferences: user.notificationPreferences,
+    });
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating notification preferences',
       error: error.message,
     });
   }
