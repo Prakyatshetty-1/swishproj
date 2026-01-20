@@ -77,6 +77,7 @@ export default function Feed() {
             commentCount: post.comments ? post.comments.length : 0,
             timeAgo: post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : "Just now",
             postData: post,
+            currentUser: currentUser,
             currentUserId: currentUser?.id || currentUser?._id,
             onPostUpdate: handlePostUpdate
           };
