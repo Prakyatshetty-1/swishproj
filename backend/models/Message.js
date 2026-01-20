@@ -2,52 +2,45 @@ import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema({
   conversationId: {
-    type: String,
-    required: true,
-    index: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Conversation',
+    required: true
   },
-  senderId: {
-    type: String,
-    required: true,
-  },
-  receiverId: {
-    type: String,
-    required: true,
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   text: {
     type: String,
+    trim: true
   },
   type: {
     type: String,
     enum: ['text', 'image', 'video', 'file'],
-    default: 'text',
+    default: 'text'
   },
   mediaUrl: {
-    type: String,
+    type: String
   },
-  status: {
-    type: String,
-    enum: ['sent', 'delivered', 'read'],
-    default: 'sent',
+  thumbnail: {
+    type: String
   },
-  sentAt: {
-    type: Date,
-    default: Date.now,
+  read: {
+    type: Boolean,
+    default: false
   },
-  deliveredAt: {
-    type: Date,
-  },
-  readAt: {
-    type: Date,
-  },
-}, {
-  timestamps: true,
+  delivered: {
+    type: Boolean,
+    default: false
+  }
+}, { 
+  timestamps: true 
 });
 
-// Index for efficient queries
+// Index for faster queries
 messageSchema.index({ conversationId: 1, createdAt: -1 });
-messageSchema.index({ senderId: 1 });
-messageSchema.index({ receiverId: 1 });
+messageSchema.index({ sender: 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 

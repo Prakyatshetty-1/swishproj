@@ -3,31 +3,39 @@ import User from '../models/User.js';
 // GET ALL USERS (with optional filtering)
 export const getAllUsers = async (req, res) => {
   try {
-    const { excludeUserId } = req.query;
+    const { excludeUserId, includeAll } = req.query;
     
     // Build filter to exclude specific user if provided
     const filter = {};
-    if (excludeUserId) {
+    
+    // If includeAll is true (for messaging), don't filter by following status
+    if (includeAll !== 'true') {
+      if (excludeUserId) {
+        filter._id = { $ne: excludeUserId };
+      }
+      
+      // Get current user's following list to exclude them
+      let followingList = [];
+      if (excludeUserId) {
+        const currentUser = await User.findById(excludeUserId, { followingList: 1 }).lean();
+        followingList = currentUser?.followingList || [];
+      }
+      
+      // Also exclude users that current user is already following
+      if (followingList.length > 0) {
+        filter._id = { 
+          $ne: excludeUserId,
+          $nin: followingList
+        };
+      }
+    } else if (excludeUserId) {
+      // For messaging, only exclude the current user
       filter._id = { $ne: excludeUserId };
-    }
-    
-    // Get current user's following list to exclude them
-    let followingList = [];
-    if (excludeUserId) {
-      const currentUser = await User.findById(excludeUserId, { followingList: 1 }).lean();
-      followingList = currentUser?.followingList || [];
-    }
-    
-    // Also exclude users that current user is already following
-    if (followingList.length > 0) {
-      filter._id = { 
-        $ne: excludeUserId,
-        $nin: followingList
-      };
     }
     
     const users = await User.find(filter, {
       name: 1,
+      username: 1,
       email: 1,
       avatarUrl: 1,
       role: 1,
@@ -44,6 +52,7 @@ export const getAllUsers = async (req, res) => {
       users: users.map((user) => ({
         _id: user._id,
         name: user.name,
+        username: user.username,
         email: user.email,
         avatarUrl: user.avatarUrl,
         role: user.role,

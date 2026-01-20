@@ -1,19 +1,36 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/authmid.js';
-import {
-  getConversations,
-  getMessages,
-  sendMessage,
+import { 
+  getConversations, 
+  getMessages, 
+  sendMessage, 
+  createConversation,
   markAsRead,
-  getUsers,
+  uploadMedia
 } from '../controllers/messagecon.js';
+import { authenticateToken } from '../middleware/authmid.js';
+import messageUpload from '../middleware/messageMulter.js';
 
 const router = express.Router();
 
-router.get('/conversations', authenticateToken, getConversations);
-router.get('/conversations/:conversationId/messages', authenticateToken, getMessages);
-router.post('/send', authenticateToken, sendMessage);
-router.put('/conversations/:conversationId/read', authenticateToken, markAsRead);
-router.get('/users', authenticateToken, getUsers);
+// All routes require authentication
+router.use(authenticateToken);
+
+// Upload media file
+router.post('/upload', messageUpload.single('file'), uploadMedia);
+
+// Get all conversations
+router.get('/conversations', getConversations);
+
+// Get messages for a conversation
+router.get('/conversations/:conversationId/messages', getMessages);
+
+// Send a message
+router.post('/messages', sendMessage);
+
+// Create or get conversation
+router.post('/conversations', createConversation);
+
+// Mark messages as read
+router.patch('/conversations/:conversationId/read', markAsRead);
 
 export default router;

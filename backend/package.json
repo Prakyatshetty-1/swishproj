@@ -24,10 +24,14 @@
     "firebase": "^12.7.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
-    "multer": "^2.0.2",
-    "sharp": "^0.34.5",
+<<<<<<< HEAD
+    "sharp": "^0.33.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
+=======
+    "multer": "^2.0.2",
+    "sharp": "^0.34.5"
+>>>>>>> 41a7b27c7311458c7353623e8da564ae342721ff
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

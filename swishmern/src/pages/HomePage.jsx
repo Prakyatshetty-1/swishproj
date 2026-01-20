@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { validateSession } from "../lib/axiosConfig";
 import axios from "axios";
 import "../styles/Home.css";
 
@@ -11,14 +12,24 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Get user info from localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      // Redirect to login if not authenticated
-      navigate("/login");
-    }
+    const initializeApp = async () => {
+      // Validate session first
+      const isValid = await validateSession();
+      if (!isValid) {
+        return; // validateSession already handles logout
+      }
+
+      // Get user info from localStorage
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        // Redirect to login if not authenticated
+        navigate("/login");
+      }
+    };
+    
+    initializeApp();
   }, [navigate]);
 
   const handleLogout = async () => {

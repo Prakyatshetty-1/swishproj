@@ -1,14 +1,29 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-const JWT_SECRET = process.env.JWT_SECRET || ' ';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || ' ';
+// Ensure dotenv is loaded
+dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+// Log JWT secrets on startup (only first few chars for security)
+console.log('🔐 JWT_SECRET in authcon.js:', JWT_SECRET ? `${JWT_SECRET.substring(0, 10)}... (${JWT_SECRET.length} chars)` : '❌ UNDEFINED');
+console.log('🔐 JWT_REFRESH_SECRET in authcon.js:', JWT_REFRESH_SECRET ? `${JWT_REFRESH_SECRET.substring(0, 10)}... (${JWT_REFRESH_SECRET.length} chars)` : '❌ UNDEFINED');
+
+if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+  console.error('❌ CRITICAL ERROR: JWT secrets are not defined! Check your .env file');
+  process.exit(1);
+}
 
 // Generate JWT Tokens
 const generateTokens = (userId) => {
+  console.log('🔑 Generating tokens with JWT_SECRET length:', JWT_SECRET.length);
   const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  console.log('✅ Tokens generated, accessToken length:', accessToken.length);
   return { accessToken, refreshToken };
 };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { useState,useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays, MessageCircle } from 'lucide-react';
+import { Home, Search, PlusSquare, Bell, User, Settings, LogOut, Shield, CalendarDays, MessageCircle, Menu, X } from 'lucide-react';
 import Logo from './ui/Logo';
 import '../styles/sidebar.css';
 
@@ -13,6 +13,7 @@ export default function Sidebar() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
       // Get user info from localStorage
@@ -23,7 +24,21 @@ export default function Sidebar() {
         // Redirect to login if not authenticated
         navigate("/login");
       }
+      
+      // Restore sidebar state from localStorage
+      const savedState = localStorage.getItem("sidebarCollapsed");
+      if (savedState !== null) {
+        setIsCollapsed(savedState === 'true');
+      }
   }, [navigate]);
+
+  const toggleSidebar = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem("sidebarCollapsed", newState.toString());
+    // Dispatch custom event for other components to listen
+    window.dispatchEvent(new CustomEvent('sidebarToggle', { detail: { isCollapsed: newState } }));
+  };
 
   const handleLogout = async () => {
     setIsLoading(true);
@@ -76,17 +91,20 @@ export default function Sidebar() {
   const NavItem = ({ icon: Icon, path, label }) => {
     const isActive = location.pathname === path || (path.startsWith('/profile') && location.pathname.startsWith('/profile'));
     return (
-      <NavLink to={path} className={`nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to={path} className={`nav-item ${isActive ? 'active' : ''}`} title={isCollapsed ? label : ''}>
         <Icon size={20} />
-        <span className="nav-label">{label}</span>
+        {!isCollapsed && <span className="nav-label">{label}</span>}
       </NavLink>
     );
   };
 
   return (
-    <aside className="app-sidebar">
+    <aside className={`app-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <Logo />
+        {!isCollapsed && <Logo />}
+        <button className="sidebar-toggle-btn" onClick={toggleSidebar} title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          {isCollapsed ? <Menu size={20} /> : <X size={20} />}
+        </button>
       </div>
 
       <nav className="sidebar-nav-section">
@@ -107,19 +125,26 @@ export default function Sidebar() {
             <NavItem icon={Shield} path="/admin" label="Admin" />
           )}
           
-          <button onClick={handleLogout} className="logout-item">
+          <button onClick={handleLogout} className="logout-item" title={isCollapsed ? 'Logout' : ''}>
             <LogOut size={20} />
-            <span className="nav-label">Logout</span>
+            {!isCollapsed && <span className="nav-label">Logout</span>}
           </button>
         </nav>
 
-        <div className="user-mini-profile">
-          <img src={user?.avatarUrl} alt={user?.name} className="user-avatar-sm" />
-          <div className="user-info-text">
-            <p className="u-name">{user?.name}</p>
-            <p className="u-role">{user?.role}</p>
+        {!isCollapsed && (
+          <div className="user-mini-profile">
+            <img src={user?.avatarUrl} alt={user?.name} className="user-avatar-sm" />
+            <div className="user-info-text">
+              <p className="u-name">{user?.name}</p>
+              <p className="u-role">{user?.role}</p>
+            </div>
           </div>
-        </div>
+        )}
+        {isCollapsed && (
+          <div className="user-mini-profile-collapsed">
+            <img src={user?.avatarUrl} alt={user?.name} className="user-avatar-sm" title={user?.name} />
+          </div>
+        )}
       </div>
     </aside>
   );

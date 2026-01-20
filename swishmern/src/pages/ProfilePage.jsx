@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios"; // Added axios
 import { formatDistanceToNow } from "date-fns"; // Added for time formatting
@@ -32,6 +32,9 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   
+  // Use ref to track if we've already fetched data for this profile
+  const lastFetchedProfileId = useRef(null);
+  
   // 1. Check Authentication on Mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -40,41 +43,63 @@ export default function ProfilePage() {
     } else {
       navigate("/login");
     }
+    
+    // Cleanup on unmount
+    return () => {
+      lastFetchedProfileId.current = null;
+    };
   }, [navigate]);
 
   // 2. Determine Whose Profile to Show
   useEffect(() => {
-    if (userId && user) {
+    if (!user) return; // Wait for user to be loaded
+    
+    const currentUserIdString = String(user.id || user._id);
+    const targetProfileId = userId || currentUserIdString;
+    
+    // Prevent re-fetching if we're already viewing this profile
+    if (lastFetchedProfileId.current === targetProfileId) {
+      return;
+    }
+    
+    lastFetchedProfileId.current = targetProfileId;
+    
+    if (userId) {
       const userIdString = String(userId);
-      const currentUserIdString = String(user.id || user._id);
       
       if (userIdString === currentUserIdString) {
         setIsOwnProfile(true);
         setViewedUser(null);
         fetchCurrentUserProfile(currentUserIdString);
       } else {
+        setIsOwnProfile(false);
         fetchUserProfile(userId);
       }
-    } else if (user && !userId) {
+    } else {
+      // No userId in URL means viewing own profile
       setIsOwnProfile(true);
       setViewedUser(null);
-      const currentUserIdString = String(user.id || user._id);
       fetchCurrentUserProfile(currentUserIdString);
     }
-  }, [userId, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, user?._id, user?.id]); // Depend on userId and user ID (but not entire user object)
 
   // 3. Determine Active Profile Data
   const profileData = isOwnProfile ? user : viewedUser;
 
   // 4. Fetch Posts for the Active Profile (NEW LOGIC)
   useEffect(() => {
-    if (profileData) {
-      const targetId = profileData._id || profileData.id;
-      if (targetId) fetchUserPosts(targetId);
+    if (!profileData) return;
+    
+    const targetId = profileData._id || profileData.id;
+    if (targetId) {
+      fetchUserPosts(targetId);
     }
-  }, [profileData]);
+  }, [profileData?._id, profileData?.id]); // Only re-fetch when ID changes
 
   const fetchUserPosts = async (id) => {
+    if (!id) return;
+    
     try {
       const response = await axios.get(`${API_BASE_URL}/posts/profile/${id}`);
       
@@ -96,6 +121,7 @@ export default function ProfilePage() {
       setPosts(formattedPosts);
     } catch (error) {
       console.error("Error fetching user posts:", error);
+      setPosts([]); // Set empty array on error
     }
   };
 
@@ -115,7 +141,16 @@ export default function ProfilePage() {
       const data = await response.json();
       const freshUser = data.user || data;
       
-      setUser(freshUser);
+      // Update user state without triggering re-fetch
+      setUser(prevUser => ({
+        ...prevUser,
+        followers: freshUser.followers,
+        following: freshUser.following,
+        posts: freshUser.posts,
+        followingList: freshUser.followingList,
+        followersList: freshUser.followersList,
+      }));
+      
       // Update local storage
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const updatedUser = {
@@ -140,6 +175,8 @@ export default function ProfilePage() {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+      
+      // Check if following
         },
       });
 
@@ -254,7 +291,14 @@ export default function ProfilePage() {
   };
 
   const handleEditSave = (updatedUser) => {
-    setUser(updatedUser);
+    // Update the user state with the new data
+    setUser(prevUser => ({
+      ...prevUser,
+      ...updatedUser
+    }));
+    
+    // Update localStorage
+    localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
   // --- Prepare Data for Header ---

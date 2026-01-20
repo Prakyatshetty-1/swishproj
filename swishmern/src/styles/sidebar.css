@@ -12,11 +12,49 @@
   padding: 24px;
   z-index: 100;
   font-family: 'Inter', sans-serif;
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.app-sidebar.collapsed {
+  width: 80px;
+  padding: 24px 12px;
 }
 
 .sidebar-header {
   margin-bottom: 32px;
   padding-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.collapsed .sidebar-header {
+  padding-left: 0;
+  justify-content: center;
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.collapsed .sidebar-toggle-btn {
+  margin-left: 0;
 }
 
 .sidebar-nav-section {
@@ -36,6 +74,12 @@
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px 8px;
 }
 
 .nav-item:hover {
@@ -80,6 +124,11 @@
   font-family: inherit;
 }
 
+.collapsed .logout-item {
+  justify-content: center;
+  padding: 12px 8px;
+}
+
 .logout-item:hover { background-color: #fef2f2; }
 
 .user-mini-profile {
@@ -87,6 +136,15 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+}
+
+.user-mini-profile-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
   background-color: #f8fafc;
   border-radius: 12px;
 }
