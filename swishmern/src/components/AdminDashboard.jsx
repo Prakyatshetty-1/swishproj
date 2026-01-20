@@ -12,7 +12,7 @@ const AdminDashboard = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const API_URL = 'http://localhost:5000/api/admin';
+  const API_URL = `${import.meta.env.VITE_BACKEND_API_URL}/admin`;
 
   useEffect(() => {
     fetchDashboardStats();

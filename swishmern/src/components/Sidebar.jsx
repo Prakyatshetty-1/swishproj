@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Compass, Calendar, PlusSquare, Bell, User, LogOut, Settings, Shield } from "lucide-react";
 import axios from "axios";
-import "../styles/Sidebar.css";
+import "../styles/sidebar.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
 

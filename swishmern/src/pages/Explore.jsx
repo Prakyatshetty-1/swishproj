@@ -5,7 +5,7 @@ import Sidebar from "../components/Sidebar";
 
 import "../styles/Explore.css";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:5000/api";
 
 // Debounce hook for search
 const useDebounce = (value, delay) => {

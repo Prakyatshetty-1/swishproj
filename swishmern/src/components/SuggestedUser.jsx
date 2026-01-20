@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import "../styles/suggested-user.css"
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:5000/api";
 
 export default function SuggestedUser({ name, role, bio, image, userId, onFollowChange }) {
   const navigate = useNavigate()

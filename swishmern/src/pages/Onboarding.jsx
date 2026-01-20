@@ -5,7 +5,7 @@ import { GraduationCap, Briefcase, ChevronLeft, Check } from 'lucide-react';
 import Logo from '../components/ui/Logo';
 import '../styles/Onboarding.css';
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:5000/api";
 const DEPARTMENTS = ['Information Tech', 'Computer Science', 'AI & DS', 'AI & ML','Mechanical', 'Civil'];
 
 export default function Onboarding() {

@@ -47,7 +47,7 @@ export default function EditProfile({ user, onClose, onSave }) {
 
     try {
       // Send update request to backend
-      const response = await fetch("http://localhost:5000/api/auth/update-profile", {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/auth/update-profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

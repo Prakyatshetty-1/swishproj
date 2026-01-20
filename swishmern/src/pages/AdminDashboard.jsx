@@ -14,7 +14,7 @@ const AdminDashboard = () => {
   const [message, setMessage] = useState('');
   const [token, setToken] = useState(null);
 
-  const API_URL = 'http://localhost:5000/api/admin';
+  const API_URL = `${import.meta.env.VITE_BACKEND_API_URL}/admin`;
 
   useEffect(() => {
     // Get token from localStorage
