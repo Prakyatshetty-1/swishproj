@@ -1,5 +1,5 @@
-import User from "../models/User.js";
 import Post from "../models/Post.js";
+import User from "../models/User.js";
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import { createLikeNotification, createCommentNotification } from './notificationcon.js';
@@ -27,7 +27,11 @@ export const createPost = async(req,res)=>{
         let imageUrl = "";
 
         if(req.file){
-            const result = await cloudinary.uploader.upload(req.file.path, {
+            //base 64 string and dataURI, these two lines are for multer memory storage.
+            const b64 = Buffer.from(req.file.buffer).toString("base64");
+            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+            const result = await cloudinary.uploader.upload(dataURI, {
                 folder: "swish_posts",
             });
             imageUrl = result.secure_url;
@@ -51,6 +55,32 @@ export const createPost = async(req,res)=>{
         res.status(500).json(err);
     }
 };
+
+//this is for home feed, only followed users ka posts dikhega.
+
+export const getTimelinePosts = async (req, res) => {
+    try {
+      const currentUserId = req.params.userId;
+      const currentUser = await User.findById(currentUserId);
+      
+      // Safety check if user not found
+      if (!currentUser) {
+        return res.status(404).json("User not found");
+      }
+  
+      // Fetch posts where the author is in the user's following list
+      // Optional: Add currentUserId to the list if you want to see your own posts too
+      const timelinePosts = await Post.find({ 
+        userId: { $in: currentUser.followingList } 
+      })
+      .populate("userId", "name avatarUrl role")
+      .sort({ createdAt: -1 });
+  
+      res.status(200).json(timelinePosts);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  };
 
 //get feed/fyp posts logic
 
