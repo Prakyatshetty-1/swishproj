@@ -114,3 +114,21 @@
   color: #64748b;
   text-transform: capitalize;
 }
+
+.notification-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+}

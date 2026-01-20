@@ -12,10 +12,12 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || ' ';
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim().toLowerCase());
 
 // Generate JWT Tokens
-const generateTokens = (userId) => {
+const generateTokens = (userId, isAdmin = false) => {
   console.log('Generating tokens for userId:', userId);
   console.log('JWT_SECRET being used:', process.env.JWT_SECRET?.substring(0, 20) + '...');
-  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+  // Admin tokens expire in 30 days (persists until logout), regular users in 1 hour
+  const expiresIn = isAdmin ? '30d' : '1h';
+  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn });
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
   console.log('Generated access token:', accessToken.substring(0, 30) + '...');
   return { accessToken, refreshToken };
@@ -39,6 +41,10 @@ export const signup = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
+      // Check if user is banned
+      if (existingUser.isBanned) {
+        return res.status(403).json({ message: 'Your account has been banned', isBanned: true, bannedReason: existingUser.bannedReason });
+      }
       return res.status(409).json({ message: 'Email already registered' });
     }
 
@@ -64,8 +70,8 @@ export const signup = async (req, res) => {
 
     await newUser.save();
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(newUser._id);
+    // Generate tokens (pass isAdmin flag)
+    const { accessToken, refreshToken } = generateTokens(newUser._id, userRole === 'admin');
 
     // Save refresh token to database
     newUser.refreshTokens.push(refreshToken);
@@ -113,6 +119,12 @@ export const login = async (req, res) => {
 
     console.log('✅ User found:', email, 'Current role:', user.role);
 
+    // Check if user is banned
+    if (user.isBanned) {
+      console.log('❌ User is banned:', email);
+      return res.status(403).json({ message: 'Your account has been banned', isBanned: true, bannedReason: user.bannedReason });
+    }
+
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
@@ -129,8 +141,8 @@ export const login = async (req, res) => {
       console.log(`✅ User ${email} promoted to admin`);
     }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    // Generate tokens (pass isAdmin flag for longer expiration)
+    const { accessToken, refreshToken } = generateTokens(user._id, user.role === 'admin');
     console.log('✅ Tokens generated successfully');
 
     // Save refresh token if "Remember me" is checked
@@ -285,8 +297,8 @@ export const googleSignIn = async (req, res) => {
       console.log(`✅ User logged in via Google: ${email}`);
     }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    // Generate tokens (pass isAdmin flag for longer expiration)
+    const { accessToken, refreshToken } = generateTokens(user._id, user.role === 'admin');
 
     // Save refresh token to database
     user.refreshTokens.push(refreshToken);

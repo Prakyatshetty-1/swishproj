@@ -68,6 +68,8 @@ export default function Notifications() {
             n._id === notificationId ? { ...n, isRead: true } : n
           )
         );
+        // Dispatch event to update sidebar badge
+        window.dispatchEvent(new Event('notificationsUpdated'));
       }
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -99,6 +101,8 @@ export default function Notifications() {
         setNotifications(
           notifications.map((n) => ({ ...n, isRead: true }))
         );
+        // Dispatch event to update sidebar badge
+        window.dispatchEvent(new Event('notificationsUpdated'));
       }
     } catch (error) {
       console.error("Error marking all notifications as read:", error);

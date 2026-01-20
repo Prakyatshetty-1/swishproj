@@ -10,6 +10,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // 1. Load User Data on Mount
   useEffect(() => {

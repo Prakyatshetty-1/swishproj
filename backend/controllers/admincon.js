@@ -69,7 +69,7 @@ export const getAllPosts = async (req, res) => {
 
     const posts = await Post.find()
       .populate('userId', 'name email')
-      .select('caption userId likes comments createdAt')
+      .select('caption userId likes comments createdAt img')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
