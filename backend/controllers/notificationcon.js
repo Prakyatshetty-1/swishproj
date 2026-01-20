@@ -14,7 +14,7 @@ export const createFollowNotification = async (recipientId, senderId) => {
     // Check if recipient has follow notifications enabled
     const recipient = await User.findById(recipientId);
     if (recipient && recipient.notificationPreferences?.follows === false) {
-      console.log(`✅ Follow notification skipped - recipient has disabled follows`);
+      console.log(`Follow notification skipped - recipient has disabled follows`);
       return;
     }
 
@@ -120,6 +120,38 @@ export const createCommentNotification = async (postId, senderId) => {
     console.error('Error creating comment notification:', error);
   }
 };
+
+export const createCommentLikeNotification = async (postId, commentId, senderId, recipientId) => {
+  try {
+    // 1. Don't notify if you like your own comment
+    if (senderId.toString() === recipientId.toString()) return;
+
+    // 2. Check if notification already exists (to prevent spamming like/unlike)
+    const existingNotification = await Notification.findOne({
+      recipient: recipientId,
+      sender: senderId,
+      post: postId,
+      type: "comment_like" // Unique type for this action
+    });
+
+    if (existingNotification) return;
+
+    // 3. Create Notification
+    const newNotification = new Notification({
+      recipient: recipientId,
+      sender: senderId,
+      post: postId,
+      type: "comment_like",
+      text: "liked your comment", // Optional text for UI
+      read: false
+    });
+
+    await newNotification.save();
+  } catch (err) {
+    console.error("Error creating comment like notification:", err);
+  }
+};
+
 
 // Get all notifications for a user
 export const getNotifications = async (req, res) => {

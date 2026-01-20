@@ -14,24 +14,25 @@ const API_BASE_URL = "http://localhost:5000/api";
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { userId } = useParams();
-  
+
   // User Data States
   const [user, setUser] = useState(null);
   const [viewedUser, setViewedUser] = useState(null);
-  
+
   // Posts State (Replaces Mock Data)
-  const [posts, setPosts] = useState([]); 
-  
+  const [posts, setPosts] = useState([]);
+
   // UI States
   const [isLoading, setIsLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [activeTab, setActiveTab] = useState("posts");
-  
+  const [savedPosts, setSavedPosts] = useState([]);
+
   // Follow States
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
-  
+
   // 1. Check Authentication on Mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -47,7 +48,7 @@ export default function ProfilePage() {
     if (userId && user) {
       const userIdString = String(userId);
       const currentUserIdString = String(user.id || user._id);
-      
+
       if (userIdString === currentUserIdString) {
         setIsOwnProfile(true);
         setViewedUser(null);
@@ -74,10 +75,36 @@ export default function ProfilePage() {
     }
   }, [profileData]);
 
+  // 5. Add a useEffect to fetch saved posts when the tab changes to "saved"
+  useEffect(() => {
+    if (activeTab === "saved" && profileData) {
+      const fetchSaved = async () => {
+        try {
+          const userId = profileData._id || profileData.id;
+          const res = await axios.get(`${API_BASE_URL}/posts/saved/${userId}`);
+
+          // Format the data for your PostsGrid
+          const formatted = res.data.map(post => ({
+            id: post._id,
+            author: post.userId?.name || "Unknown",
+            // ... map other fields just like you do for regular posts ...
+            postImage: post.img,
+            // etc.
+          }));
+
+          setSavedPosts(formatted);
+        } catch (err) {
+          console.error("Error fetching saved posts", err);
+        }
+      };
+      fetchSaved();
+    }
+  }, [activeTab, profileData]);
+
   const fetchUserPosts = async (id) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/posts/profile/${id}`);
-      
+
       // Map MongoDB data to the format PostsGrid expects
       const formattedPosts = response.data.map(post => ({
         id: post._id,
@@ -88,8 +115,8 @@ export default function ProfilePage() {
         likes: post.likes ? post.likes.length : 0,
         caption: post.caption,
         commentCount: post.comments ? post.comments.length : 0,
-        timeAgo: post.createdAt 
-          ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) 
+        timeAgo: post.createdAt
+          ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
           : "Just now"
       }));
 
@@ -114,7 +141,7 @@ export default function ProfilePage() {
 
       const data = await response.json();
       const freshUser = data.user || data;
-      
+
       setUser(freshUser);
       // Update local storage
       const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -166,14 +193,14 @@ export default function ProfilePage() {
   // --- Follow / Unfollow Logic (Existing) ---
   const handleFollow = async () => {
     if (!user || !viewedUser) return;
-    
+
     console.log("🔗 FOLLOW REQUEST:", {
       currentUserId: user.id || user._id,
       targetUserId: viewedUser._id || viewedUser.id,
       currentUser: user,
       viewedUser: viewedUser
     });
-    
+
     try {
       setIsFollowLoading(true);
       const response = await fetch(`${API_BASE_URL}/auth/follow`, {
@@ -290,8 +317,8 @@ export default function ProfilePage() {
         <Sidebar />
       </div>
       <div className="profile-main">
-        <ProfileHeader 
-          userData={userData} 
+        <ProfileHeader
+          userData={userData}
           onEditClick={() => setIsEditModalOpen(true)}
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
@@ -299,15 +326,21 @@ export default function ProfilePage() {
           onUnfollow={handleUnfollow}
           isFollowLoading={isFollowLoading}
         />
-        
+
         {isOwnProfile ? (
           <>
             <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
             {activeTab === "posts" && <PostsGrid posts={posts} />}
             {activeTab === "saved" && (
-                <div style={{padding: '20px', textAlign: 'center', color: '#666'}}>
+              <>
+                {savedPosts.length > 0 ? (
+                  <PostsGrid posts={savedPosts} />
+                ) : (
+                  <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                     No saved posts yet.
-                </div>
+                  </div>
+                )}
+              </>
             )}
           </>
         ) : (

@@ -109,6 +109,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

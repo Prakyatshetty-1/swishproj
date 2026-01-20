@@ -2,7 +2,7 @@ import Post from "../models/Post.js";
 import User from "../models/User.js";
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
-import { createLikeNotification, createCommentNotification } from './notificationcon.js';
+import { createLikeNotification, createCommentNotification, createCommentLikeNotification } from './notificationcon.js';
 
 dotenv.config();
 
@@ -74,6 +74,7 @@ export const getTimelinePosts = async (req, res) => {
         userId: { $in: currentUser.followingList } 
       })
       .populate("userId", "name avatarUrl role")
+      .populate("comments.userId", "name avatarUrl")  //this fixed the unknown user problem in comments section.
       .sort({ createdAt: -1 });
   
       res.status(200).json(timelinePosts);
@@ -265,14 +266,100 @@ export const addComment = async(req, res) => {
         
         // Create comment notification
         await createCommentNotification(postId, userId);
-        
-        const populatedPost = await Post.findById(postId).populate("comments.userId", "name avatarUrl");
+                                                        // //this fixed the unknown user problem in name of person who posted.
+        const populatedPost = await Post.findById(postId).populate("userId", "name avatarUrl role").populate("comments.userId", "name avatarUrl");
         
         res.status(200).json({ message: "Comment added", post: populatedPost });
     } catch(err) {
         console.error("Error adding comment: ", err);
         res.status(500).json(err);
     }
+};
+
+// backend/controllers/postcon.js
+
+// Like a specific comment
+export const likeComment = async (req, res) => {
+  try {
+    const { postId, commentId, userId } = req.body;
+
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    // Find the specific comment
+    const comment = post.comments.id(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    // Check if user already liked the comment
+    const likeIndex = comment.likes.indexOf(userId);
+
+    if (likeIndex === -1) {
+      comment.likes.push(userId); // Like
+      await createCommentLikeNotification(postId, commentId, userId, comment.userId); //notify the user if someone liked his/her comment
+    } else {
+      comment.likes.splice(likeIndex, 1); // Unlike
+    }
+
+    await post.save();
+
+    // Repopulate everything so frontend updates instantly
+    const populatedPost = await Post.findById(postId)
+      .populate("userId", "name avatarUrl role")
+      .populate("comments.userId", "name avatarUrl");
+
+    res.status(200).json({ post: populatedPost });
+  } catch (err) {
+    console.error("Error liking comment:", err);
+    res.status(500).json(err);
+  }
+};
+
+// Save / Unsave a Post
+export const savePost = async (req, res) => {
+  try {
+    const { postId, userId } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isSaved = user.savedPosts.includes(postId);
+
+    if (isSaved) {
+      // Unsave: Remove from array
+      user.savedPosts = user.savedPosts.filter((id) => id.toString() !== postId);
+      await user.save();
+      res.status(200).json({ message: "Post unsaved", isSaved: false });
+    } else {
+      // Save: Add to array
+      user.savedPosts.push(postId);
+      await user.save();
+      res.status(200).json({ message: "Post saved", isSaved: true });
+    }
+  } catch (err) {
+    console.error("Error saving post:", err);
+    res.status(500).json(err);
+  }
+};
+
+// Get Saved Posts for a User (For the Profile Tab)
+export const getSavedPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find user and populate the savedPosts array with full post details
+    const user = await User.findById(userId).populate({
+      path: "savedPosts",
+      populate: { path: "userId", select: "name avatarUrl role" } // Populate author of the saved post
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Return the reversed array so most recently saved appears first
+    res.status(200).json(user.savedPosts.reverse());
+  } catch (err) {
+    console.error("Error fetching saved posts:", err);
+    res.status(500).json(err);
+  }
 };
 
 // Get all comments for a post

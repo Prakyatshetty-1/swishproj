@@ -7,7 +7,7 @@ import "../styles/Home.css";
 const API_BASE_URL = "http://localhost:5000/api";
 
 export default function Post({
-  id,
+id,
   author,
   authorRole,
   timeAgo,
@@ -20,9 +20,11 @@ export default function Post({
   hashtags = [],
   postData,
   currentUserId,
+  currentUser,
   onPostUpdate
 }) {
   const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
@@ -31,52 +33,82 @@ export default function Post({
   const [isLoadingLike, setIsLoadingLike] = useState(false);
 
   // Initialize likes and comments on mount
-  useEffect(() => {
+useEffect(() => {
     if (postData) {
-      // Check if current user liked the post
-      const userLiked = postData?.likes?.some(like => {
+      // 1. Check Like Status (Existing)
+      // We need the ID string for comparison
+      const currentUserIdString = typeof currentUserId === 'object' ? (currentUserId._id || currentUserId.id) : currentUserId;
+      
+      const userLiked = postData.likes?.some(like => {
         const likeId = typeof like === 'string' ? like : like?._id;
-        const userId = typeof currentUserId === 'string' ? currentUserId : currentUserId?._id;
-        return likeId === userId;
+        return likeId === currentUserIdString;
       });
       setIsLiked(userLiked || false);
       setLikeCount(postData.likes?.length || 0);
-      
-      // Initialize comments
+
+      // 2. Initialize comments (Existing)
       const postComments = Array.isArray(postData.comments) ? postData.comments : [];
       setComments(postComments);
     }
-  }, [postData, currentUserId]);
+    if (currentUser && currentUser.savedPosts) {
+      const isPostSaved = currentUser.savedPosts.some(savedItem => {
+         // Handle case where savedItem is just an ID string OR a populated object
+         const savedId = typeof savedItem === 'string' ? savedItem : savedItem._id;
+         return savedId === id;
+      });
+      setIsSaved(isPostSaved);
+    }
+  }, [postData, currentUserId, currentUser, id]);
 
   const handleLike = async () => {
-  if (!currentUserId) {
-    alert("Please log in to like posts");
-    return;
-  }
-
-  try {
-    setIsLoadingLike(true);
-    const response = await axios.post(`${API_BASE_URL}/posts/like`, {
-      postId: id,
-      userId: currentUserId
-    });
-    
-    // Toggle the like state
-    setIsLiked(!isLiked);
-    setLikeCount(response.data.likes.length);
-    
-    // Update parent component with full post data
-    if (onPostUpdate && response.data.post) {
-      onPostUpdate(response.data.post);
+    if (!currentUserId) {
+      alert("Please log in to like posts");
+      return;
     }
-  } catch (err) {
-    console.error("Error liking post:", err);
-    console.error("Error details:", err.response?.data); // More detailed error
-    alert("Failed to like post. Please try again.");
-  } finally {
-    setIsLoadingLike(false);
-  }
-};
+
+    try {
+      setIsLoadingLike(true);
+      const response = await axios.post(`${API_BASE_URL}/posts/like`, {
+        postId: id,
+        userId: currentUserId
+      });
+
+      // Toggle the like state
+      setIsLiked(!isLiked);
+      setLikeCount(response.data.likes.length);
+
+      // Update parent component with full post data
+      if (onPostUpdate && response.data.post) {
+        onPostUpdate(response.data.post);
+      }
+    } catch (err) {
+      console.error("Error liking post:", err);
+      console.error("Error details:", err.response?.data); // More detailed error
+      alert("Failed to like post. Please try again.");
+    } finally {
+      setIsLoadingLike(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!currentUserId) return alert("Login to save posts!");
+
+    try {
+      // Optimistic UI update
+      const newStatus = !isSaved;
+      setIsSaved(newStatus);
+
+      await axios.post(`${API_BASE_URL}/posts/save`, {
+        postId: id,
+        userId: currentUserId
+      });
+
+      // Optional: Add a toast notification here
+    } catch (err) {
+      console.error("Error saving post:", err);
+      setIsSaved(!isSaved); // Revert on error
+    }
+  };
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -89,11 +121,11 @@ export default function Post({
         userId: currentUserId,
         text: commentText
       });
-      
+
       const updatedComments = Array.isArray(response.data.post.comments) ? response.data.post.comments : [];
       setComments(updatedComments);
       setCommentText("");
-      
+
       // Update parent component
       if (onPostUpdate) {
         onPostUpdate(response.data.post);
@@ -124,7 +156,7 @@ export default function Post({
             </div>
             {location && (
               <div className="post-location">
-                 {location}
+                {location}
               </div>
             )}
           </div>
@@ -138,7 +170,7 @@ export default function Post({
 
       <div className="post-engagement">
         <div className="post-actions">
-          <button 
+          <button
             className={`action-btn ${isLiked ? 'liked' : ''}`}
             onClick={handleLike}
             disabled={isLoadingLike}
@@ -146,14 +178,24 @@ export default function Post({
           >
             <Heart size={20} fill={isLiked ? '#ef4444' : 'none'} />
           </button>
-          <button className="action-btn">
+          <button
+            className="action-btn"
+            onClick={() => setIsCommentsModalOpen(true)}
+          >
             <MessageCircle size={20} />
           </button>
           <button className="action-btn">
             <Share2 size={20} />
           </button>
-          <button className="action-btn bookmark-btn">
-            <Bookmark size={20} />
+          <button
+            className="action-btn bookmark-btn"
+            onClick={handleSave}
+          >
+            <Bookmark
+              size={20}
+              fill={isSaved ? "black" : "none"}
+              color={isSaved ? "black" : "currentColor"}
+            />
           </button>
         </div>
 
@@ -173,7 +215,7 @@ export default function Post({
             )}
           </p>
         </div>
-        
+
         {location && <div className="post-time-bottom">{timeAgo}</div>}
 
         {/* Comments Section - Show only latest comment */}
@@ -182,8 +224,8 @@ export default function Post({
             {displayedComments.map((comment, index) => (
               <div key={index} className="comment" style={{ marginBottom: '8px', fontSize: '0.875rem' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <img 
-                    src={comment.userId?.avatarUrl || "https://ui-avatars.com/api/?name=User"} 
+                  <img
+                    src={comment.userId?.avatarUrl || "https://ui-avatars.com/api/?name=User"}
                     alt="commenter"
                     style={{ width: '24px', height: '24px', borderRadius: '50%' }}
                   />
@@ -196,9 +238,9 @@ export default function Post({
                 </div>
               </div>
             ))}
-            
+
             {comments.length > 1 && (
-              <button 
+              <button
                 onClick={() => setIsCommentsModalOpen(true)}
                 style={{
                   background: 'none',
@@ -220,7 +262,7 @@ export default function Post({
 
         {/* Add Comment Input */}
         <form onSubmit={handleAddComment} style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '8px' }}>
-          <input 
+          <input
             type="text"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
@@ -236,7 +278,7 @@ export default function Post({
               backgroundColor: '#f1f5f9'
             }}
           />
-          <button 
+          <button
             type="submit"
             disabled={!commentText.trim() || isLoadingComment || !currentUserId}
             style={{
@@ -256,11 +298,14 @@ export default function Post({
       </div>
 
       {/* Comments Modal */}
-      <CommentsModal 
+      <CommentsModal
         isOpen={isCommentsModalOpen}
         onClose={() => setIsCommentsModalOpen(false)}
         comments={comments}
         postAuthor={author}
+        currentUserId={currentUserId}
+        postId={id}
+        onPostUpdate={onPostUpdate}
       />
     </div>
   )

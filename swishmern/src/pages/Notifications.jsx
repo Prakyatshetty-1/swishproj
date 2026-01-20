@@ -158,6 +158,8 @@ export default function Notifications() {
   const getIcon = (type) => {
     switch(type) {
       case 'like': return <Heart size={12} fill="currentColor" />;
+      // ✅ ADDED: Icon for comment likes
+      case 'comment_like': return <Heart size={12} fill="currentColor" />; 
       case 'comment': return <MessageCircle size={12} fill="currentColor" />;
       case 'follow': return <UserPlus size={12} />;
       default: return null;
@@ -167,6 +169,8 @@ export default function Notifications() {
   const getBadgeClass = (type) => {
     switch(type) {
       case 'like': return 'badge-like';
+      // ✅ ADDED: Badge color for comment likes (Same as like)
+      case 'comment_like': return 'badge-like';
       case 'comment': return 'badge-comment';
       case 'follow': return 'badge-follow';
       default: return 'badge-comment';
@@ -236,12 +240,15 @@ export default function Notifications() {
 
               <div className="notif-content">
                 <p className="notif-text">
-                  <span className="user-name-bold">{notif.senderId?.name || "Unknown User"}</span> {notif.message}
+                  <span className="user-name-bold">{notif.senderId?.name || "Unknown User"}</span> 
+                  {/* ✅ UPDATED: Handle text vs message field just in case */}
+                  {" "}{notif.text || notif.message}
                 </p>
                 <span className="notif-time">{formatTime(notif.createdAt)}</span>
               </div>
 
-              {(notif.type === 'like' || notif.type === 'comment') && notif.postId?.img && (
+              {/* ✅ UPDATED: Show thumbnail for comment_like as well */}
+              {(notif.type === 'like' || notif.type === 'comment' || notif.type === 'comment_like') && notif.postId?.img && (
                 <div 
                   className="notif-post-thumb" 
                   style={{backgroundImage: `url(${notif.postId.img})`}}
