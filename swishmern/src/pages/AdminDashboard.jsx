@@ -450,14 +450,23 @@ const AdminDashboard = () => {
           <div className="posts-list">
             {posts.map((post) => (
               <div key={post._id} className="post-item">
+                {post.img && (
+                  <div className="post-image-container">
+                    <img 
+                      src={post.img} 
+                      alt="Post preview" 
+                      className="post-image"
+                    />
+                  </div>
+                )}
                 <div className="post-header">
                   <h4>{post.userId?.name || 'Unknown User'}</h4>
                   <span className="post-email">{post.userId?.email}</span>
                 </div>
                 <p className="post-caption">{post.caption}</p>
                 <div className="post-stats">
-                  <span>{post.likes?.length || 0} likes</span>
-                  <span>{post.comments?.length || 0} comments</span>
+                  <span>❤️ {post.likes?.length || 0} likes</span>
+                  <span>💬 {post.comments?.length || 0} comments</span>
                 </div>
                 <button
                   className="btn-delete-post"

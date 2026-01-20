@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "../components/ui/Button"; 
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import Logo from "../components/ui/Logo";
 import { signInWithGoogle } from "../lib/googleAuth";
 
@@ -16,6 +16,8 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isBanned, setIsBanned] = useState(false);
+  const [bannedReason, setBannedReason] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -59,7 +61,15 @@ export default function Login() {
       }
     } catch (err) {
       setIsLoading(false);
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      const message = err.response?.data?.message || "Login failed. Please try again.";
+      
+      // Check if user is banned
+      if (err.response?.status === 403 && err.response?.data?.isBanned) {
+        setIsBanned(true);
+        setBannedReason(err.response?.data?.bannedReason || "No reason provided");
+      } else {
+        setError(message);
+      }
       console.error("Login error:", err);
     }
   }
@@ -71,6 +81,35 @@ export default function Login() {
       <div className="auth-logo-container">
         <Logo />
       </div>
+
+      {/* Ban Notification Modal */}
+      {isBanned && (
+        <div className="ban-modal-overlay" onClick={() => setIsBanned(false)}>
+          <div className="ban-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="ban-modal-header">
+              <AlertCircle size={32} color="#ef4444" />
+              <h2>Account Banned</h2>
+            </div>
+            <p className="ban-modal-message">
+              Your account has been suspended and you cannot log in.
+            </p>
+            {bannedReason && (
+              <div className="ban-reason">
+                <strong>Reason:</strong> {bannedReason}
+              </div>
+            )}
+            <p className="ban-modal-footer">
+              If you believe this is a mistake, please contact support.
+            </p>
+            <button 
+              className="ban-modal-close-btn"
+              onClick={() => setIsBanned(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="login-card animate-scale-in">
         <div className="login-header">

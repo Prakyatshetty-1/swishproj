@@ -13,17 +13,53 @@ export default function Sidebar() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   useEffect(() => {
       // Get user info from localStorage
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         setUser(JSON.parse(storedUser));
+        const userData = JSON.parse(storedUser);
+        const userId = userData._id || userData.id;
+        if (userId) {
+          fetchUnreadNotifications(userId);
+        }
       } else {
         // Redirect to login if not authenticated
         navigate("/login");
       }
   }, [navigate]);
+
+  // Fetch unread notifications count
+  const fetchUnreadNotifications = async (userId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/notifications/${userId}`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+      });
+      const unreadCount = (response.data.notifications || []).filter(n => !n.isRead).length;
+      setUnreadNotificationCount(unreadCount);
+    } catch (error) {
+      console.error("Error fetching notifications count:", error);
+    }
+  };
+
+  // Listen for notification updates
+  useEffect(() => {
+    const handleNotificationUpdate = () => {
+      if (user) {
+        const userId = user._id || user.id;
+        if (userId) {
+          fetchUnreadNotifications(userId);
+        }
+      }
+    };
+
+    window.addEventListener('notificationsUpdated', handleNotificationUpdate);
+    return () => window.removeEventListener('notificationsUpdated', handleNotificationUpdate);
+  }, [user]);
 
   const handleLogout = async () => {
     setIsLoading(true);
@@ -73,11 +109,16 @@ export default function Sidebar() {
     }
   };
 
-  const NavItem = ({ icon: Icon, path, label }) => {
+  const NavItem = ({ icon: Icon, path, label, badge = 0 }) => {
     const isActive = location.pathname === path || (path.startsWith('/profile') && location.pathname.startsWith('/profile'));
     return (
       <NavLink to={path} className={`nav-item ${isActive ? 'active' : ''}`}>
-        <Icon size={20} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Icon size={20} />
+          {badge > 0 && (
+            <span className="notification-badge">{badge > 99 ? '99+' : badge}</span>
+          )}
+        </div>
         <span className="nav-label">{label}</span>
       </NavLink>
     );
@@ -94,7 +135,7 @@ export default function Sidebar() {
         <NavItem icon={Search} path="/explore" label="Explore" />
         <NavItem icon={CalendarDays} path="/events" label="Events" />
         <NavItem icon={PlusSquare} path="/create-post" label="Create" />
-        <NavItem icon={Bell} path="/notifications" label="Notifications" />
+        <NavItem icon={Bell} path="/notifications" label="Notifications" badge={unreadNotificationCount} />
         <NavItem icon={User} path="/profile" label="Profile" />
       </nav>
 
