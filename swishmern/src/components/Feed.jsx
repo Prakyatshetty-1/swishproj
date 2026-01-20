@@ -1,4 +1,4 @@
-import React, {useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { formatDistanceToNow } from "date-fns";
 import StorySection from "./StorySection";
@@ -18,26 +18,36 @@ export default function Feed() {
     { id: 4, name: "Design", image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=150" },
   ];
 
-  // Fetch posts from backend
+  // ✅ MERGED USEEFFECT: Fetches User + Timeline only
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchTimeline = async () => {
+      // 1. Get current user
+      const userStr = localStorage.getItem("user");
+      if (!userStr) {
+         setLoading(false);
+         return;
+      }
+      
+      const user = JSON.parse(userStr);
+      setCurrentUser(user); // Set state for passing to Post component
+      const userId = user.id || user._id;
+
       try {
-        const res = await axios.get(`${API_BASE_URL}/posts/feed`);
-        setPosts(res.data.posts);
+        // 2. Call the TIMELINE endpoint (Followed users only)
+        const res = await axios.get(`${API_BASE_URL}/posts/timeline/${userId}`);
         
-        // Get current user from localStorage
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          setCurrentUser(user);
-        }
+        // Note: Check your controller. If it sends res.json(posts), use res.data. 
+        // If it sends res.json({ posts: [...] }), use res.data.posts.
+        // Based on your previous code, it sends the array directly:
+        setPosts(res.data); 
       } catch (err) {
-        console.error("Error fetching feed:", err);
+        console.error("Error fetching timeline:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
+    
+    fetchTimeline();
   }, []);
 
   const handlePostUpdate = (updatedPost) => {
@@ -49,7 +59,7 @@ export default function Feed() {
       <StorySection stories={storiesData} />
       
       {/* Loading State */}
-      {loading && <p style={{textAlign: 'center', padding: '20px', color: '#64748b'}}>Loading posts...</p>}
+      {loading && <p style={{textAlign: 'center', padding: '20px', color: '#64748b'}}>Loading timeline...</p>}
       
       {/* Posts List */}
       <div className="feed-posts" style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -67,7 +77,6 @@ export default function Feed() {
             commentCount: post.comments ? post.comments.length : 0,
             timeAgo: post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : "Just now",
             postData: post,
-            // Handle both 'id' and '_id' properties from localStorage
             currentUserId: currentUser?.id || currentUser?._id,
             onPostUpdate: handlePostUpdate
           };
@@ -75,9 +84,10 @@ export default function Feed() {
         })}
         
         {!loading && posts.length === 0 && (
-          <p style={{textAlign: 'center', padding: '40px', color: '#94a3b8'}}>
-            No posts yet. Be the first to post!
-          </p>
+          <div style={{textAlign: 'center', padding: '40px', color: '#94a3b8'}}>
+            <p>Your timeline is empty!</p>
+            <p style={{fontSize: '0.9rem'}}>Follow people in the Explore tab to see posts here.</p>
+          </div>
         )}
       </div>
     </div>
