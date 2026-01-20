@@ -1,15 +1,29 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || ' ';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || ' ';
 
+// Admin emails from environment
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim().toLowerCase());
+
 // Generate JWT Tokens
 const generateTokens = (userId) => {
+  console.log('Generating tokens for userId:', userId);
+  console.log('JWT_SECRET being used:', process.env.JWT_SECRET?.substring(0, 20) + '...');
   const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  console.log('Generated access token:', accessToken.substring(0, 30) + '...');
   return { accessToken, refreshToken };
+};
+
+// Helper: Check if email is admin
+const isAdminEmail = (email) => {
+  return ADMIN_EMAILS.includes(email.toLowerCase());
 };
 
 // SIGNUP
@@ -32,12 +46,15 @@ export const signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // Determine user role - set to admin if email is in admin list
+    const userRole = isAdminEmail(email) ? 'admin' : role;
+
     // Create new user
     const newUser = new User({
       name,
       email: email.toLowerCase(),
       passwordHash,
-      role,
+      role: userRole,
       avatarUrl,
       posts: 0,
       followers: 0,
@@ -80,6 +97,7 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
+    console.log('🔐 Login attempt for email:', email);
 
     // Validate inputs
     if (!email || !password) {
@@ -87,19 +105,33 @@ export const login = async (req, res) => {
     }
 
     // Find user and include password field
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    let user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    console.log('✅ User found:', email, 'Current role:', user.role);
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
+      console.log('❌ Password invalid for user:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    console.log('✅ Password valid');
+
+    // Check if user should be admin (email in admin list) and update if needed
+    if (isAdminEmail(email) && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+      console.log(`✅ User ${email} promoted to admin`);
     }
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
+    console.log('✅ Tokens generated successfully');
 
     // Save refresh token if "Remember me" is checked
     if (rememberMe) {
@@ -124,7 +156,7 @@ export const login = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     res.status(500).json({ message: 'Error logging in', error: error.message });
   }
 };
@@ -235,7 +267,7 @@ export const googleSignIn = async (req, res) => {
         email: email.toLowerCase(),
         passwordHash: null, // No password for Google auth users
         avatarUrl: photoURL || null,
-        role: 'student', // Default role
+        role: 'admin', // Default role
         googleId: idToken,
         passwordSetupRequired: true, // New Google users must set a password
       });
