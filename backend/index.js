@@ -38,12 +38,11 @@ mongoose.connect(MONGODB_URI, {
   });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/events', eventRoutes);
-
+app.use('/auth', authRoutes);
+app.use('/posts', postRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/admin', adminRoutes);
+app.use('/events', eventRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Server is running' });
