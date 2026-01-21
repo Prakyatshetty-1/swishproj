@@ -7,6 +7,7 @@ import postRoutes from "./routes/posts.js";
 import notificationRoutes from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
 import eventRoutes from './routes/events.js';
+import storyRoutes from "./routes/stories.js";
 
 dotenv.config();
 
@@ -57,11 +58,20 @@ mongoose.connect(MONGODB_URI, {
   });
 
 // Routes
+<<<<<<< Updated upstream
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/admin', adminRoutes);
 app.use('/events', eventRoutes);
+=======
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/events', eventRoutes);
+app.use("/api/stories", storyRoutes);
+>>>>>>> Stashed changes
 
 // Health check
 app.get('/health', (req, res) => {

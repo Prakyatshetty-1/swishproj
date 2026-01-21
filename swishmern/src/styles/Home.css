@@ -283,3 +283,268 @@
 .view-comments:hover {
   color: #111827;
 }
+
+/* Story Strip */
+.stories-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.story-circle-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  padding: 3px;
+  position: relative;
+}
+
+/* Instagram Gradient Ring */
+.has-story {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.story-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid white; /* Creates gap between ring and image */
+  object-fit: cover;
+}
+
+.add-story-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #2563EB;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.story-username {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #0f172a;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 70px;
+}
+
+/* --- Viewer Modal --- */
+.story-viewer-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.story-viewer-content {
+  position: relative;
+  max-width: 400px;
+  width: 100%;
+  height: 80vh;
+}
+
+.story-full-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Keeps entire image visible */
+  border-radius: 12px;
+}
+
+.story-viewer-header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  font-weight: 600;
+}
+
+.viewer-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid white;
+}
+
+.close-story-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* --- Upload Preview Modal --- */
+.story-viewer-content.upload-mode {
+  background: #1e293b; /* Dark background for editing */
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  height: auto;
+  max-height: 90vh;
+}
+
+.story-viewer-content.upload-mode h3 {
+    color: white;
+    margin: 0;
+}
+
+.story-preview-img {
+    max-height: 60vh;
+    max-width: 100%;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.caption-input-wrapper {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+}
+
+.caption-input-wrapper input {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    outline: none;
+}
+
+.caption-input-wrapper button {
+    background: #2563EB;
+    color: white;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- Viewer Caption Overlay --- */
+.story-caption-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    background: rgba(0,0,0,0.5); /* Semi-transparent black strip */
+    padding: 16px;
+    text-align: center;
+    color: white;
+    backdrop-filter: blur(4px);
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.story-caption-overlay p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* --- Delete Button --- */
+.delete-story-btn {
+    position: absolute;
+    bottom: 20px; /* Adjust if it clashes with caption */
+    right: 20px;
+    background: rgba(239, 68, 68, 0.8); /* Red background */
+    border: none;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+/* Fix overlap if caption exists */
+.story-caption-overlay + .delete-story-btn {
+    bottom: 80px; /* Move delete button up if caption bar is present */
+}
+
+/* --- Story Viewer Progress Bars --- */
+.story-progress-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    gap: 4px;
+    z-index: 20;
+}
+
+.progress-bar-bg {
+    flex: 1; /* Distribute space equally */
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: white;
+    transition: width 0.2s ease-in-out;
+}
+
+/* --- Invisible Navigation Areas --- */
+.nav-hit-area {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+    /* border: 1px solid red; /* Uncomment to debug click areas */ 
+}
+
+.nav-hit-area.left {
+    left: 0;
+    width: 30%; /* Left 30% of screen goes back */
+    cursor: pointer;
+}
+
+.nav-hit-area.right {
+    right: 0;
+    width: 70%; /* Right 70% goes next (easier for thumb) */
+    cursor: pointer;
+}
+
+.story-time {
+    font-size: 0.8rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-left: 8px;
+}
