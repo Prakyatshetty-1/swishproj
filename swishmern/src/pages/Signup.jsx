@@ -2,30 +2,47 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "../components/ui/Button"; 
-import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Camera, AlertCircle } from "lucide-react";
 import Logo from "../components/ui/Logo";
 import { signInWithGoogle } from "../lib/googleAuth";
 
-import "../styles/Login.css";
+import "../styles/Signup.css";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:5000/api";
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isBanned, setIsBanned] = useState(false);
   const [bannedReason, setBannedReason] = useState("");
+  
+  // State for Form Data
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
+    role: "student",
   });
+
+  // State for Profile Image Preview
+  const [profileImage, setProfileImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(""); // Clear error when user starts typing
+  }
+
+  // Handle Image Selection
+  function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImage(imageUrl);
+      setImageFile(file);
+    }
   }
 
   async function handleSubmit(e) {
@@ -34,34 +51,47 @@ export default function Login() {
     setError("");
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      // Convert image to base64 if exists
+      let avatarUrl = null;
+      
+      if (imageFile) {
+        avatarUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(imageFile);
+        });
+      }
+      
+      // Submit signup
+      const response = await axios.post(`${API_BASE_URL}/auth/signup`, {
+        name: formData.name,
         email: formData.email,
         password: formData.password,
-        rememberMe: rememberMe,
+        role: formData.role,
+        avatarUrl: avatarUrl,
       });
 
-      if (response.data && response.data.accessToken && response.data.user) {
-        // Store tokens and user info in localStorage
-        localStorage.setItem("accessToken", response.data.accessToken);
-        localStorage.setItem("refreshToken", response.data.refreshToken);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        localStorage.setItem("onboardingComplete", response.data.user.onboardingComplete ? 'true' : 'false');
+      // Store tokens and user info in localStorage
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // DO NOT set onboardingComplete here - user needs to complete onboarding first
+      localStorage.removeItem("onboardingComplete");
 
-        setIsLoading(false);
-        
-        // Dispatch custom event to notify App of auth state change
-        window.dispatchEvent(new Event('authStateChanged'));
-        
-        // Delay slightly to ensure App has processed the auth state change
-        setTimeout(() => {
-          navigate("/home", { replace: true });
-        }, 50);
-      } else {
-        throw new Error("Invalid response from server");
-      }
+      console.log("✅ Signup successful, tokens stored");
+
+      setIsLoading(false);
+      
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      // Navigate to onboarding
+      navigate("/onboarding", { replace: true });
+
     } catch (err) {
       setIsLoading(false);
-      const message = err.response?.data?.message || "Login failed. Please try again.";
+      const message = err.response?.data?.message || err.message || "Signup failed. Please try again.";
       
       // Check if user is banned
       if (err.response?.status === 403 && err.response?.data?.isBanned) {
@@ -70,7 +100,7 @@ export default function Login() {
       } else {
         setError(message);
       }
-      console.error("Login error:", err);
+      console.error("❌ Signup error:", err);
     }
   }
 
@@ -87,13 +117,13 @@ export default function Login() {
       // Now we can set loading state after popup is already opened
       setIsLoading(true);
       
-      // Only redirect to set-password if password setup is required (new signup)
+      // If new Google signup, redirect to set password
       if (result?.user && result.user.passwordSetupRequired === true) {
         setTimeout(() => {
           navigate('/set-password', { replace: true });
         }, 50);
       } else {
-        // Redirect after successful login
+        // Redirect after successful signup/login
         setTimeout(() => {
           navigate("/home", { replace: true });
         }, 50);
@@ -122,7 +152,7 @@ export default function Login() {
               <h2>Account Banned</h2>
             </div>
             <p className="ban-modal-message">
-              Your account has been suspended and you cannot log in.
+              Your account has been suspended and you cannot sign up.
             </p>
             {bannedReason && (
               <div className="ban-reason">
@@ -142,15 +172,56 @@ export default function Login() {
         </div>
       )}
 
-      <div className="login-card animate-scale-in">
-        <div className="login-header">
-          <h1 className="login-title">Welcome Back!</h1>
-          <p className="login-subtitle">Sign in to your campus account.</p>
+      <div className="signup-card">
+        <div className="signup-header">
+          <h1 className="signup-title">Join Swish</h1>
+          <p className="signup-subtitle">Create your exclusive campus account.</p>
+        </div>
+
+        {/* Profile Picture Upload Section */}
+        <div className="profile-upload-section">
+          <label className="profile-upload-wrapper">
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleImageUpload}
+              style={{ display: 'none' }} 
+            />
+            <div className="profile-placeholder">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="profile-img-preview" />
+              ) : (
+                <User className="text-gray-400" size={40} />
+              )}
+            </div>
+            <div className="camera-btn">
+              <Camera size={16} />
+            </div>
+          </label>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message" style={{color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}
           
+          {/* Full Name */}
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
+            <div className="input-wrapper">
+              <User className="input-icon" size={18} />
+              <input
+                name="name"
+                type="text"
+                placeholder="John Doe"
+                className="form-input"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Email */}
           <div className="form-group">
             <label className="form-label">Campus Email</label>
             <div className="input-wrapper">
@@ -167,16 +238,15 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Password */}
           <div className="form-group">
-            <div className="form-row">
-              <label className="form-label">Password</label>
-            </div>
+            <label className="form-label">Password</label>
             <div className="input-wrapper">
               <Lock className="input-icon" size={18} />
               <input
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder="Create a strong password"
                 className="form-input"
                 value={formData.password}
                 onChange={handleChange}
@@ -192,33 +262,22 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="form-options">
-            <label className="remember-me">
-              <input 
-                type="checkbox" 
-                checked={rememberMe} 
-                onChange={(e) => setRememberMe(e.target.checked)} 
-              />
-              <span>Remember me</span>
-            </label>
-            <Link to="/forgot-password" className="forgot-link">
-              Forgot password?
-            </Link>
-          </div>
-
+          {/* Submit Button */}
           <Button type="submit" variant="brand" className="submit-btn" disabled={isLoading}>
             {isLoading ? (
               <div className="spinner" /> 
             ) : (
-              <>Sign In <ArrowRight size={18} style={{marginLeft: 8}} /></>
+              <>Create Account <ArrowRight size={18} style={{marginLeft: 8}} /></>
             )}
           </Button>
         </form>
 
+        {/* Divider */}
         <div className="divider">
           <span>or continue with</span>
         </div>
 
+        {/* Social Buttons */}
         <div className="social-grid">
           <button 
             type="button"
@@ -242,9 +301,14 @@ export default function Login() {
           </button>
         </div>
 
-        <p className="auth-footer">
-          Don't have an account? 
-          <Link to="/signup" className="link-primary">Sign up here</Link>
+        {/* Footer Links */}
+        <p className="auth-footer-text">
+          By signing up, you agree to our <a href="#" className="link-text">Terms</a> and <a href="#" className="link-text">Privacy Policy</a>
+        </p>
+
+        <p className="login-redirect">
+          Already have an account? 
+          <Link to="/login" className="link-primary">Sign in</Link>
         </p>
       </div>
     </div>
