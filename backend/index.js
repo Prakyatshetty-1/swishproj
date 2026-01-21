@@ -14,11 +14,30 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/swish';
 
-// Middleware
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:5173', // Vite dev server
+  'https://swishproj.vercel.app', // Vercel deployment
+  // Add more production domains here
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, origin);
+    } else {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+  },
   credentials: true,
+  optionsSuccessStatus: 200 // For legacy browser support
 }));
+
+// Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -43,6 +62,7 @@ app.use('/posts', postRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/admin', adminRoutes);
 app.use('/events', eventRoutes);
+
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ message: 'Server is running' });
