@@ -261,6 +261,7 @@ export const setPassword = async (req, res) => {
 };
 
 // GOOGLE SIGNIN
+// GOOGLE SIGNIN
 export const googleSignIn = async (req, res) => {
   try {
     const { idToken, email, name, photoURL } = req.body;
@@ -273,18 +274,21 @@ export const googleSignIn = async (req, res) => {
     let user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
+      // Determine role based on admin email list
+      const userRole = isAdminEmail(email) ? 'admin' : 'student';
+      
       // Create new user from Google sign in
       user = new User({
         name: name || '',
         email: email.toLowerCase(),
         passwordHash: null, // No password for Google auth users
         avatarUrl: photoURL || null,
-        role: 'admin', // Default role
+        role: userRole, // Use determined role instead of hardcoded 'admin'
         googleId: idToken,
         passwordSetupRequired: true, // New Google users must set a password
       });
       await user.save();
-      console.log(`✅ New user created via Google Sign In: ${email}`);
+      console.log(`✅ New user created via Google Sign In: ${email} with role: ${userRole}`);
     } else {
       // Update existing user with Google profile info
       if (!user.avatarUrl && photoURL) {
@@ -293,8 +297,25 @@ export const googleSignIn = async (req, res) => {
       if (!user.googleId) {
         user.googleId = idToken;
       }
+      
+      // Check if user should be admin (email in admin list) and update if needed
+      if (isAdminEmail(email) && user.role !== 'admin') {
+        user.role = 'admin';
+        console.log(`✅ User ${email} promoted to admin via Google sign in`);
+      }
+      
       await user.save();
       console.log(`✅ User logged in via Google: ${email}`);
+    }
+
+    // Check if user is banned
+    if (user.isBanned) {
+      console.log('❌ User is banned:', email);
+      return res.status(403).json({ 
+        message: 'Your account has been banned', 
+        isBanned: true, 
+        bannedReason: user.bannedReason 
+      });
     }
 
     // Generate tokens (pass isAdmin flag for longer expiration)
